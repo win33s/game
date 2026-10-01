@@ -1,0 +1,1328 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>승진이 승진하자</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@1,500&family=Gothic+A1:wght@400;500;700&family=Hahmlet:wght@300;500;600;700;800&display=swap">
+<style>
+/* Layout: 파티스리 상자 같은 초대장 한 장. 위에 얇은 HUD와 팀 명단, 아래 크림색 무대, 그 위로 장면·공문 패널이 겹친다. 단일 테마(블러시 핑크). */
+:root{
+  --blush:#F4D5DA;
+  --blush-hi:#FBEAED;
+  --blush-lo:#E9B6C2;
+  --rose:#E59FB0;
+  --wine:#4B1226;
+  --wine-soft:#8B5F6C;
+  --cream:#FFF8F1;
+  --pistachio:#BAD0A6;
+  --cherry:#C81E45;
+  --gilt:#C2953C;
+  --flame:#F0A63A;
+  --white:#FFFFFF;
+  --night:rgba(30,6,16,.6);
+  --glow:rgba(240,166,58,.55);
+  --gloss:rgba(255,255,255,.7);
+  --line:rgba(75,18,38,.2);
+  --shade:rgba(75,18,38,.24);
+  --shadow:rgba(75,18,38,.55);
+  --veil:rgba(244,213,218,.95);
+  --display:"Hahmlet","Nanum Myeongjo","Batang",serif;
+  --body:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --latin:"Bodoni Moda","Didot","Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:radial-gradient(120% 80% at 18% 0%,var(--blush-hi) 0%,var(--blush) 46%,var(--blush-lo) 100%) var(--blush);color:var(--wine);font-family:var(--body);font-size:15px;line-height:1.55;padding-inline:16px;overflow:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:10;opacity:.2;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .29 0 0 0 0 .07 0 0 0 0 .15 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.app{height:100%;max-width:680px;margin-inline:auto;display:flex;flex-direction:column;gap:8px;padding-block:12px}
+button,input{font-family:inherit;font-size:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--cherry);outline-offset:3px}
+
+/* HUD와 팀 명단 */
+.hud{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px}
+.hud-no{font-family:var(--latin);font-style:italic;font-size:16px;color:var(--wine-soft)}
+.hud-rank{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:-.01em;line-height:1.2}
+.hud-next{font-size:12px;color:var(--wine-soft)}
+.gauge{flex:1 1 110px;align-self:center;height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+.gauge i{display:block;height:100%;width:0;background:var(--wine);transition:width .2s}
+.lives{font-size:12px;letter-spacing:.04em;color:var(--cherry);font-weight:700;white-space:nowrap}
+.mute{background:none;border:0;border-bottom:1px solid var(--wine);padding:0 0 1px;font-size:12px;cursor:pointer}
+.team{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;min-height:22px}
+.pl{display:inline-flex;align-items:center;gap:5px;font-size:12px;line-height:1.5;padding:1px 9px 1px 7px;border-radius:999px;background:var(--cream);box-shadow:0 0 0 1px var(--line);max-width:100%}
+.pl i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--pc,var(--wine))}
+.pl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:7em}
+.pl b{font-family:var(--latin);font-style:italic;font-weight:500;font-variant-numeric:tabular-nums}
+.pl.me{box-shadow:0 0 0 1px var(--wine)}
+.pl small{font-size:9px;letter-spacing:.08em;color:var(--wine-soft)}
+.take{margin-left:auto;background:none;border:0;border-bottom:1px solid var(--wine-soft);padding:0 0 1px;font-size:11px;color:var(--wine-soft);cursor:pointer}
+
+/* 무대 */
+.stage{position:relative;flex:1;min-height:0;background:var(--cream);border-radius:3px;box-shadow:0 0 0 1px var(--wine),0 30px 50px -34px var(--shadow);overflow:hidden}
+.stage::after{content:"";position:absolute;inset:6px;border:1px solid var(--line);pointer-events:none;z-index:6}
+.stage.hit{animation:hit .3s}
+.stage.quake{animation:quake .4s}
+@keyframes hit{0%{background:var(--rose)}100%{background:var(--cream)}}
+@keyframes quake{0%,100%{transform:none}15%{transform:translate(-7px,5px) rotate(-.6deg)}35%{transform:translate(6px,-5px) rotate(.5deg)}55%{transform:translate(-4px,3px)}75%{transform:translate(3px,-2px)}}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.fx{position:absolute;inset:0;pointer-events:none;z-index:5}
+
+/* 패널 공통 */
+.panel{position:absolute;inset:0;overflow-y:auto;background:var(--veil);display:flex;flex-direction:column;align-items:center;gap:16px;padding:28px 22px 46px}
+.panel::before,.panel::after{content:"";flex:1 0 0}
+.scene{display:flex;flex-direction:column;align-items:center;gap:20px;width:100%}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+.scene>*:not(.gift),#lobby>*,#msg>*,#result>*{animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
+.scene>:nth-child(2),#lobby>:nth-child(2),#msg>:nth-child(2),#result>:nth-child(2){animation-delay:.07s}
+.scene>:nth-child(3),#lobby>:nth-child(3),#msg>:nth-child(3),#result>:nth-child(3){animation-delay:.14s}
+.scene>:nth-child(4),#lobby>:nth-child(4),#msg>:nth-child(4),#result>:nth-child(4){animation-delay:.21s}
+.scene>:nth-child(5),#lobby>:nth-child(5),#msg>:nth-child(5){animation-delay:.28s}
+#lobby>:nth-child(n+6),#msg>:nth-child(n+6){animation-delay:.35s}
+
+.eyebrow{display:flex;align-items:center;gap:10px;margin:0;font-family:var(--latin);font-style:italic;font-size:16px;color:var(--wine-soft);letter-spacing:.03em}
+.eyebrow::before,.eyebrow::after{content:"";width:28px;height:1px;background:var(--wine-soft)}
+h1{position:relative;z-index:0;font-family:var(--display);font-weight:800;font-size:clamp(38px,10.5vw,64px);line-height:1.1;letter-spacing:-.03em;margin:0;text-align:center}
+h1 em{position:relative;font-style:normal;color:var(--cherry)}
+h1 em::after{content:"";position:absolute;left:-.04em;right:-.04em;bottom:.04em;height:.2em;background:var(--rose);z-index:-1}
+.scene h2{font-family:var(--display);font-weight:700;font-size:clamp(24px,6.4vw,36px);line-height:1.28;letter-spacing:-.02em;margin:0;text-align:center;text-wrap:balance}
+.scene h2 em{font-style:normal;color:var(--cherry)}
+.lead{max-width:29em;text-align:center;margin:0}
+.sub{font-size:13px;color:var(--wine-soft);text-align:center;margin:0}
+.wait{font-size:13px;color:var(--wine-soft);text-align:center;margin:0;padding:10px 18px;border-block:1px solid var(--line)}
+.go{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.02em;background:var(--wine);color:var(--cream);border:0;border-radius:2px;padding:14px 32px;cursor:pointer;outline:1px solid var(--wine-soft);outline-offset:-5px;transition:transform .15s,background .15s}
+.go i{font-family:var(--latin);font-style:italic;margin-left:8px}
+.go:hover{background:var(--cherry);transform:translateY(-2px)}
+.go:active{transform:translateY(0)}
+.go:focus-visible{outline:2px solid var(--cherry);outline-offset:3px}
+.quit{background:none;border:0;border-bottom:1px solid var(--wine-soft);padding:0 0 1px;font-size:12px;color:var(--wine-soft);cursor:pointer}
+.force{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:3;white-space:nowrap}
+
+/* 장면 0: 엄숙한 공지 → 갑자기 케이크 */
+#intro{background:var(--cream)}
+#intro.popped{background:var(--blush)}
+#intro.popped #sc0{visibility:hidden}
+.bar{width:150px;height:2px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--wine);animation:load 1.9s linear both}
+@keyframes load{from{width:0}}
+.cakepop{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px 20px 30px}
+.cakeshot{position:relative;height:min(50vh,430px);aspect-ratio:3/4;max-width:78%;border:0;padding:0;background:none;cursor:pointer;transform:rotate(-4deg);animation:slam .45s ease-out both}
+.cakeshot img{display:block;width:100%;height:100%;object-fit:cover;border:8px solid var(--cream);box-shadow:0 0 0 1px var(--line),0 34px 60px -22px var(--shadow)}
+.cakeshot.boing{animation:boing .4s ease-out both}
+@keyframes slam{0%{transform:scale(0) rotate(-40deg)}55%{transform:scale(1.16) rotate(3deg)}78%{transform:scale(.95) rotate(-6deg)}100%{transform:scale(1) rotate(-4deg)}}
+@keyframes boing{0%{transform:scale(1) rotate(-4deg)}35%{transform:scale(1.12,.9) rotate(-1deg)}70%{transform:scale(.95,1.06) rotate(-6deg)}100%{transform:scale(1) rotate(-4deg)}}
+.shout{position:absolute;left:-13%;top:-7%;font-family:var(--display);font-weight:800;font-size:clamp(36px,10vw,60px);line-height:1;letter-spacing:-.04em;text-align:left;color:var(--cherry);-webkit-text-stroke:9px var(--cream);paint-order:stroke fill;transform:rotate(-8deg);animation:slam2 .3s .2s ease-out both}
+.sticker{position:absolute;right:-11%;bottom:6%;width:84px;height:84px;border-radius:50%;background:var(--pistachio);box-shadow:0 0 0 1px var(--wine),0 10px 18px -8px var(--shadow);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:14px;line-height:1.2;text-align:center;transform:rotate(12deg);animation:slam3 .3s .34s ease-out both}
+@keyframes slam2{0%{transform:scale(2.4) rotate(-8deg);opacity:0}100%{transform:scale(1) rotate(-8deg);opacity:1}}
+@keyframes slam3{0%{transform:scale(0) rotate(60deg)}70%{transform:scale(1.2) rotate(8deg)}100%{transform:scale(1) rotate(12deg)}}
+.cakepop .go{animation:rise .4s .55s both}
+.credit{font-size:10px;color:var(--wine-soft);margin-top:-12px}
+
+/* 대기실 */
+.field{display:flex;align-items:baseline;gap:12px;width:min(100%,300px)}
+.field label{font-size:11px;letter-spacing:.16em;color:var(--wine-soft);white-space:nowrap}
+.field input{flex:1;min-width:0;border:0;border-bottom:1px solid var(--wine);border-radius:0;background:none;padding:6px 2px;font-family:var(--display);font-weight:600;font-size:18px}
+.roster{list-style:none;margin:0;padding:0;width:min(100%,300px)}
+.roster li{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-block:7px;font-family:var(--display);font-weight:600}
+.roster li i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--pc,var(--wine))}
+.roster li span{flex:1;min-width:0;overflow-wrap:anywhere}
+.roster li small{font-family:var(--body);font-weight:400;font-size:11px;color:var(--wine-soft)}
+.photo{font-size:12px;border-bottom:1px solid var(--wine);cursor:pointer}
+.photo input{position:absolute;opacity:0;width:1px;height:1px}
+
+/* 선물 상자 */
+.gift{position:relative;width:170px;height:160px;margin-top:30px;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation}
+.gift::after{content:"";position:absolute;left:18px;right:18px;bottom:-9px;height:16px;border-radius:50%;background:var(--shade);filter:blur(6px)}
+.gift .box{position:absolute;left:14px;right:14px;bottom:0;height:96px;background:var(--rose);border:1.5px solid var(--wine);border-radius:3px;z-index:1}
+.gift .band{position:absolute;left:50%;margin-left:-13px;width:26px;top:66px;bottom:0;background:var(--wine);z-index:1}
+.gift .lid{position:absolute;left:4px;right:4px;top:30px;height:38px;border:1.5px solid var(--wine);border-radius:3px;z-index:2;background:linear-gradient(90deg,transparent calc(50% - 13px),var(--wine) calc(50% - 13px),var(--wine) calc(50% + 13px),transparent calc(50% + 13px)) var(--rose);transition:transform .5s cubic-bezier(.3,1.6,.5,1)}
+.gift .lid::before,.gift .lid::after{content:"";position:absolute;top:-25px;width:34px;height:24px;background:var(--wine);border-radius:50% 50% 4px 50%}
+.gift .lid::before{right:50%}
+.gift .lid::after{left:50%;transform:scaleX(-1)}
+.gift.shake{animation:shake .3s}
+.gift.open .lid{transform:translateY(-58px) rotate(-14deg)}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg) scale(1.05)}75%{transform:rotate(6deg) scale(1.05)}}
+.tag{font-family:var(--display);font-weight:600;font-size:14px;padding:8px 18px;border-block:1px solid var(--wine);text-align:center}
+
+/* 촛불 */
+.arena{position:relative;width:100%;max-width:420px;height:min(44vh,330px);touch-action:none}
+.cake{position:absolute;left:50%;bottom:0;margin-left:-115px;width:230px;height:116px}
+.cake::before{content:"";position:absolute;left:50%;margin-left:-40px;width:80px;bottom:0;height:10px;background:var(--rose);border:1.5px solid var(--wine);border-radius:2px 2px 6px 6px}
+.cake::after{content:"";position:absolute;left:0;right:0;bottom:8px;height:11px;background:var(--rose);border:1.5px solid var(--wine);border-radius:6px}
+.candle{position:absolute;left:0;top:0;z-index:1;width:38px;height:80px;border:0;background:none;padding:0;cursor:pointer;touch-action:none;transition:transform .34s cubic-bezier(.3,1.5,.5,1)}
+.candle.loose{transition:none}
+.candle.loose::before{content:"";position:absolute;left:50%;margin-left:-5px;bottom:-7px;width:10px;height:8px;border-inline:1.5px solid var(--wine)}
+.candle::after{content:"";position:absolute;left:50%;margin-left:-4px;bottom:0;width:8px;height:48px;border:1.5px solid var(--wine);border-radius:2px;background:repeating-linear-gradient(135deg,var(--cream) 0 5px,var(--rose) 5px 9px)}
+.candle i{position:absolute;left:50%;margin-left:-7px;top:8px;width:14px;height:22px;background:radial-gradient(circle at 50% 72%,var(--cream) 0 16%,var(--flame) 58%);border-radius:50% 50% 50% 50%/68% 68% 32% 32%;box-shadow:0 0 18px 4px var(--glow);transform-origin:50% 100%;animation:flick .5s ease-in-out infinite alternate}
+.candle.off{cursor:default}
+.candle.off i{opacity:0;animation:none}
+@keyframes flick{from{transform:rotate(-5deg) scaleY(1)}to{transform:rotate(5deg) scaleY(1.16)}}
+.tier{position:absolute;left:14px;right:14px;bottom:18px;height:96px;background:var(--cream);border:1.5px solid var(--wine);border-radius:6px 6px 2px 2px;display:grid;place-items:center;padding-top:24px;font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.18em;overflow:hidden}
+.tier::before{content:"";position:absolute;left:0;right:0;top:0;height:32px;background:radial-gradient(circle 11px at 50% 0,var(--rose) 98%,transparent) 0 18px/24px 12px repeat-x,linear-gradient(var(--rose),var(--rose)) 0 0/100% 18px no-repeat}
+
+/* 풍선 */
+.slots{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.slots span{width:38px;height:46px;border-bottom:1px solid var(--wine);font-family:var(--display);font-weight:800;font-size:32px;line-height:44px;text-align:center}
+.slots span.gap{width:12px;border:0}
+.slots span.on{color:var(--cherry);animation:drop .35s}
+@keyframes drop{from{transform:translateY(-30px);opacity:0}}
+.balloons{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 14px;max-width:330px;min-height:100px}
+.balloon{position:relative;width:54px;height:68px;border:1.5px solid var(--wine);border-radius:50% 50% 50% 50%/46% 46% 54% 54%;cursor:pointer;margin-bottom:28px;font-family:var(--latin);font-style:italic;font-size:24px;color:var(--wine);background-image:radial-gradient(circle at 32% 26%,var(--gloss) 0 9%,transparent 22%);animation:bob 2.4s ease-in-out infinite alternate}
+.balloon::after{content:"";position:absolute;left:50%;top:100%;width:1px;height:26px;background:var(--wine-soft)}
+.balloon.b0{background-color:var(--rose)}
+.balloon.b1{background-color:var(--pistachio)}
+.balloon.b2{background-color:var(--wine);color:var(--cream)}
+.balloon.pop{visibility:hidden}
+@keyframes bob{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-12px) rotate(3deg)}}
+
+/* 안내 패널의 범례 */
+.legend{display:grid;gap:8px;justify-items:center}
+.legend div{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px}
+.legend b{font-size:11px;font-weight:500;letter-spacing:.16em;color:var(--wine-soft);margin-right:4px}
+.chip{font-family:var(--display);font-weight:600;font-size:13px;padding:3px 12px;border-radius:999px;border:1px solid var(--wine)}
+.chip.good{background:var(--pistachio)}
+.chip.bad{background:var(--wine);color:var(--blush)}
+
+/* 게임 중 인사발령 배너 */
+.promo{position:absolute;left:50%;top:15%;z-index:4;width:min(84%,360px);transform:translateX(-50%) rotate(-1.5deg);background:var(--cream);padding:16px 18px 18px;text-align:center;box-shadow:0 0 0 1px var(--wine),0 0 0 5px var(--cream),0 0 0 6px var(--line),0 26px 40px -24px var(--shadow);animation:stamp .28s ease-out}
+@keyframes stamp{from{transform:translateX(-50%) rotate(-1.5deg) scale(1.5);opacity:0}}
+.promo.top{top:14px;padding:8px 16px 10px}
+.promo.top .t{font-size:20px;margin-block:2px}
+.promo .k{font-size:11px;letter-spacing:.6em;text-indent:.6em;color:var(--cherry)}
+.promo .t{font-family:var(--display);font-weight:800;font-size:28px;line-height:1.2;letter-spacing:-.02em;margin-block:6px 4px}
+.promo .r{font-size:13px;color:var(--wine-soft)}
+
+/* 결정전 직전에 떨어지는 로고 */
+.logodrop{position:absolute;inset:0;z-index:4;display:grid;place-items:center;background:var(--night)}
+.logodrop img{width:min(80%,440px);height:auto;background:var(--white);padding:16px 20px;border-radius:4px;box-shadow:0 40px 80px -20px var(--shadow);animation:logoslam .7s cubic-bezier(.4,0,.6,1) both}
+@keyframes logoslam{0%{transform:translateY(-150vh) rotate(-9deg)}55%{transform:translateY(0) rotate(0) scale(1.2,.78)}70%{transform:translateY(-10%) scale(.94,1.1)}85%{transform:translateY(0) scale(1.05,.95)}100%{transform:none}}
+
+/* 결과 공문 */
+.doc{position:relative;width:min(100%,380px);background:var(--cream);padding:24px 22px 22px;font-family:var(--display);box-shadow:0 0 0 1px var(--wine),0 0 0 5px var(--cream),0 0 0 6px var(--line),0 28px 40px -28px var(--shadow)}
+.doc h2{margin:0;text-align:center;font-size:22px;font-weight:800;letter-spacing:.6em;text-indent:.6em}
+.doc .no{text-align:center;font-family:var(--latin);font-style:italic;font-size:14px;color:var(--wine-soft);margin-block:2px 14px}
+.doc dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0;border-top:1px solid var(--line);padding-top:14px}
+.doc dt{color:var(--wine-soft);font-weight:500}
+.doc dd{margin:0;font-weight:700;min-width:0}
+.doc .note{font-family:var(--body);font-size:14px;margin:14px 0 0;border-top:1px solid var(--line);padding-top:12px}
+.seal{position:absolute;right:16px;top:50px;width:62px;height:62px;border:2px solid var(--cherry);outline:1px solid var(--cherry);outline-offset:-6px;border-radius:50%;color:var(--cherry);display:grid;place-items:center;font-weight:800;font-size:17px;transform:rotate(-14deg);opacity:.88}
+.board{width:min(100%,380px)}
+.board h3{font-size:11px;font-weight:500;letter-spacing:.2em;margin:0 0 4px;color:var(--wine-soft)}
+.board ol{margin:0;padding:0;list-style:none;font-variant-numeric:tabular-nums}
+.board li{display:flex;align-items:baseline;gap:10px;border-bottom:1px solid var(--line);padding-block:5px}
+.board li i{flex:none;align-self:center;width:8px;height:8px;border-radius:50%;background:var(--pc,var(--wine))}
+.board li span{flex:1;min-width:0;overflow-wrap:anywhere;font-family:var(--display);font-weight:600}
+.board li b{font-weight:400;font-size:12px;color:var(--wine-soft);text-align:right}
+
+@media (prefers-reduced-motion:reduce){
+  .stage.hit,.stage.quake,.candle i,.balloon,.gift.shake,.slots span.on,.cakeshot,.cakeshot.boing,.shout,.sticker,.cakepop .go,.promo,.bar i,.logodrop img,.scene>*:not(.gift),#lobby>*,#msg>*,#result>*{animation:none}
+  .gauge i,.gift .lid,.go,.candle{transition:none}
+}
+</style>
+
+<main class="app">
+  <header class="hud">
+    <span class="hud-no" id="rankNo">Team</span>
+    <span class="hud-rank" id="rankNow">문승진 생일 작전</span>
+    <span class="hud-next" id="rankNext">접속 대기</span>
+    <div class="gauge" aria-label="팀 진행도"><i id="gauge"></i></div>
+    <div class="lives" id="livesBox" hidden></div>
+    <button class="mute" id="mute" type="button">소리 켜짐</button>
+  </header>
+  <div class="team" id="teamBar">
+    <span id="team" class="team"></span>
+    <button class="take" id="takeHost" type="button" hidden>방장 넘겨받기</button>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="cv"></canvas>
+    <canvas class="fx" id="fx"></canvas>
+
+    <div class="promo" id="promo" hidden>
+      <div class="k">인사발령</div>
+      <div class="t" id="promoT"></div>
+      <div class="r" id="promoR"></div>
+    </div>
+
+    <section class="panel" id="intro">
+      <div class="scene" id="sc0">
+        <p class="eyebrow">Human Resources</p>
+        <h2>문승진 님께<br>중요한 안내가 있습니다</h2>
+        <div class="bar"><i></i></div>
+        <p class="sub">공문을 불러오는 중입니다</p>
+      </div>
+      <div class="cakepop" id="cakepop" hidden>
+        <button class="cakeshot" id="cakeshot" type="button" aria-label="케이크 누르기">
+          <img id="cakeImg" src="cake.jpg" width="720" height="960" alt="체리를 올린 분홍색 드립 생일 케이크">
+          <span class="shout">생일<br>축하해</span>
+          <span class="sticker">오늘의<br>주인공</span>
+        </button>
+        <button class="go" id="toLobby" type="button">축하하러 가기<i>→</i></button>
+        <span class="credit">Photo · Deva Williamson / Unsplash</span>
+      </div>
+      <div class="scene" id="sc1" hidden>
+        <p class="eyebrow">Special Delivery</p>
+        <h2>문승진 님 앞으로<br>사내 택배가 도착했습니다</h2>
+        <button class="gift" id="gift" type="button" aria-label="선물 상자 두드리기"><span class="box"></span><span class="band"></span><span class="lid"></span></button>
+        <div class="tag" id="giftTag">다 같이 두드려서 여세요</div>
+      </div>
+      <div class="scene" id="sc2" hidden>
+        <p class="eyebrow">Make a Wish</p>
+        <h2 id="cakeTitle">촛불을 눌러서<br>같이 꺼 주세요</h2>
+        <div class="arena" id="arena">
+          <div class="cake"><div class="tier">祝 문승진</div></div>
+        </div>
+      </div>
+      <div class="scene" id="sc3" hidden>
+        <p class="eyebrow">One More Thing</p>
+        <h2 id="balTitle">풍선 안에 생일 선물이<br>숨어 있습니다</h2>
+        <div class="slots" id="slots"></div>
+        <div class="balloons" id="balloons"></div>
+        <p class="wait" id="balWait" hidden>다른 사람들이 다 터뜨리기를 기다리는 중</p>
+      </div>
+      <button class="quit force" id="force" type="button" hidden>기다리지 않고 넘기기</button>
+    </section>
+
+    <section class="panel" id="lobby" hidden>
+      <p class="eyebrow">Team Birthday</p>
+      <h1>같이<br><em>승진</em>시키기</h1>
+      <div class="field"><label for="nick">내 이름</label><input id="nick" type="text" maxlength="8" autocomplete="off"></div>
+      <ul class="roster" id="roster"></ul>
+      <p class="sub" id="lobbyInfo">연결하는 중입니다</p>
+      <button class="go" id="lobbyGo" type="button">이 인원으로 시작<i>→</i></button>
+      <p class="sub">한 명이 누르면 모두 같이 시작됩니다 · 점수는 팀 합계로 셉니다</p>
+      <label class="photo">승진이 얼굴 사진 넣기 (이 기기에만)<input id="face" type="file" accept="image/*"></label>
+    </section>
+
+    <section class="panel" id="msg" hidden>
+      <p class="eyebrow" id="mEyebrow"></p>
+      <h1 id="mTitle"></h1>
+      <p class="lead" id="mLead"></p>
+      <div class="legend" id="mLegend" hidden>
+        <div><b>받기</b><span class="chip good">결재</span><span class="chip good">칭찬</span><span class="chip good">성과급</span><span class="chip good">칼퇴</span></div>
+        <div><b>피하기</b><span class="chip bad">야근</span><span class="chip bad">회식</span><span class="chip bad">반려</span><span class="chip bad">월요일</span></div>
+      </div>
+      <button class="go" id="mGo" type="button" hidden><span id="mGoT"></span><i>→</i></button>
+      <p class="wait" id="mWait" hidden></p>
+      <p class="sub" id="mHint" hidden></p>
+      <button class="quit" id="mQuit" type="button" hidden>사장으로 만족하기</button>
+    </section>
+
+    <section class="panel" id="result" hidden>
+      <div class="doc">
+        <h2>인사발령</h2>
+        <div class="no">N° 2026 — Birthday</div>
+        <div class="seal" id="seal">승진</div>
+        <dl>
+          <dt>성명</dt><dd>문승진</dd>
+          <dt>최종 직급</dt><dd id="resRank"></dd>
+          <dt>승진시킨 팀</dt><dd id="resTeam"></dd>
+        </dl>
+        <p class="note" id="resNote"></p>
+      </div>
+      <div class="board" id="board"><h3>팀 공로</h3><ol></ol></div>
+      <button class="go" id="again" type="button" hidden>처음부터 다시<i>→</i></button>
+      <p class="wait" id="rWait" hidden></p>
+    </section>
+
+    <div class="logodrop" id="logoDrop" hidden><img id="logoImg" src="logo.jpg" width="480" height="270" alt="SK hynix 로고"></div>
+  </div>
+</main>
+
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+(function(){
+  var RANKS=['인턴','사원','주임','대리','과장','차장','부장','이사','상무','전무','사장','회장'];
+  var REASONS=['','이름이 승진이라서','출근을 함','복사기를 고침','회식에서 고기를 잘 구움','부장님 농담에 웃어 줌','엑셀 단축키를 3개 앎','점심 메뉴를 빨리 정함','회의를 5분 일찍 끝냄','오늘 생일이라서','더 올라갈 데가 별로 없어서'];
+  var GOOD=['결재','칭찬','성과급','칼퇴','법카','연차'];
+  var BAD=['야근','회식','반려','월요일','주말출근','재택 취소'];
+  var TOP=RANKS.length-1;
+  var C={wine:'#4B1226',cream:'#FFF8F1',blush:'#F4D5DA',rose:'#E59FB0',pistachio:'#BAD0A6',cherry:'#C81E45',gilt:'#C2953C',skin:'#F3CDAE',hair:'#2E0A17',lego:'#F7CE46',navy:'#2A2D46',floor:'#FBEAED',tile:'rgba(229,159,176,.2)',soft:'#8B5F6C',mint:'#8FB07A',shade:'rgba(75,18,38,.16)',ghost:'rgba(75,18,38,.055)',rule:'rgba(75,18,38,.3)'};
+  var PAL=['#C81E45','#3F7A5B','#C2953C','#5B6FB8','#B4569A','#D97A3A','#3E8FA3','#7A5C3E'];
+  var CHIP='600 15px "Hahmlet","Nanum Myeongjo",serif';
+
+  var $=function(id){return document.getElementById(id)};
+  var stage=$('stage'),cv=$('cv'),ctx=cv.getContext('2d'),fx=$('fx'),fctx=fx.getContext('2d'),P=[];
+  var W=300,HH=400,dpr=1;
+  var S={mode:'idle',view:'catch',level:0,items:[],pops:[],px:150,target:150,spawn:0,promo:0};
+  var keys={},faceImg=null,muted=false,ac=null;
+  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+  function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+  function num(v){return clamp(+v||0,0,99999)}
+  function pad(n){return ('0'+n).slice(-2)}
+  function need(l){return 3+Math.floor(l/2)}
+
+  function resize(){
+    var r=stage.getBoundingClientRect();
+    W=Math.max(200,r.width);HH=Math.max(200,r.height);
+    dpr=Math.min(2,window.devicePixelRatio||1);
+    cv.width=fx.width=Math.round(W*dpr);cv.height=fx.height=Math.round(HH*dpr);
+    S.px=clamp(S.px,30,W-30);
+  }
+  if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);
+  window.addEventListener('resize',resize);resize();
+
+  function audio(){
+    if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}
+    if(ac&&ac.state==='suspended'){try{ac.resume()}catch(e){}}
+  }
+  function beep(f,d,type,v){
+    if(muted||!ac||ac.state!=='running')return;
+    try{
+      var o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime;
+      o.type=type||'square';o.frequency.value=f;
+      g.gain.setValueAtTime(v||.06,t);g.gain.exponentialRampToValueAtTime(.001,t+d);
+      o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+d);
+    }catch(e){}
+  }
+  function fanfare(){[523,659,784,1047].forEach(function(f,i){setTimeout(function(){beep(f,.18,'triangle',.09)},i*110)})}
+  function tune(){
+    var n=[[392,.2],[392,.2],[440,.4],[392,.4],[523,.4],[494,.7],[392,.2],[392,.2],[440,.4],[392,.4],[587,.4],[523,.8]],t=0;
+    n.forEach(function(a){setTimeout(function(){beep(a[0],a[1]*.9,'triangle',.09)},t*1000);t+=a[1]+.03});
+  }
+  function boom(){beep(58,.55,'sawtooth',.16);beep(92,.35,'square',.1);beep(1500,.05,'square',.06)}
+
+  // 축하 효과: 무대 전체를 덮는 파티클 캔버스
+  var PC=[C.rose,C.cherry,C.pistachio,C.gilt,C.wine];
+  function burst(x,y,n,smoke){
+    if(reduce)n=Math.ceil(n/5);
+    for(var i=0;i<n;i++){
+      var a=Math.random()*Math.PI*2,v=smoke?20+Math.random()*30:90+Math.random()*320;
+      P.push({x:x,y:y,vx:Math.cos(a)*v,vy:smoke?-40-Math.random()*50:Math.sin(a)*v-130,g:smoke?-20:420,t:0,max:.7+Math.random()*.9,
+        c:smoke?'#8B5F6C':PC[i%PC.length],s:smoke?5+Math.random()*5:4+Math.random()*5,r:Math.random()*6});
+    }
+  }
+  function center(el){var a=el.getBoundingClientRect(),b=stage.getBoundingClientRect();return {x:a.left-b.left+a.width/2,y:a.top-b.top+a.height/2}}
+  function fireworks(k){for(var i=0;i<k;i++)setTimeout(function(){burst(W*(.15+Math.random()*.7),HH*(.15+Math.random()*.4),50);beep(300+Math.random()*500,.15,'triangle',.05)},i*260)}
+  function replay(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls)}
+  function fxStep(dt){
+    fctx.setTransform(dpr,0,0,dpr,0,0);fctx.clearRect(0,0,W,HH);
+    for(var i=P.length-1;i>=0;i--){
+      var p=P[i];p.t+=dt;if(p.t>p.max){P.splice(i,1);continue}
+      p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=dt*8;
+      fctx.globalAlpha=1-p.t/p.max;fctx.fillStyle=p.c;
+      fctx.fillRect(p.x-p.s/2,p.y-p.s/2,p.s,p.s*(.4+Math.abs(Math.sin(p.r))*.8));
+    }
+    fctx.globalAlpha=1;
+  }
+
+  // ───── 팀 연결 ─────
+  // 각자 자기 점수만 presence에 올리고, 방장 한 명의 presence가 지금 단계(ph·sub·run)를 정한다.
+  // 팀 점수는 모든 사람의 점수를 더한 값이다. 연결이 안 되는 기기는 혼자서 같은 흐름을 탄다.
+  var room=null,net='wait',ME={},myPeer='~me',joined=false;
+  var HS={},HP=null,LAST=null,lastKey='',lostAt=0,busy=false,endAt=0,autoAt=0;
+  var PH={
+    gift:{goal:function(n){return 8*n},auto:1500},
+    candle:{goal:function(n){return 5*n},auto:5200},
+    bbang:{goal:function(n){return 8*n},limit:30},
+    balloon:{goal:function(n){return 7*n},auto:3200},
+    catch:{lives:function(n){return 6*n}},
+    logo:{auto:2900},
+    duel:{goal:function(n){return 15*n},limit:30,auto:2800}
+  };
+  var NEXT={gift:['candle','play'],candle:['bbang','intro'],balloon:['catch','intro',{base:0}],logo:['duel','intro'],duel:['end','show',{lv:TOP}]};
+
+  function setMe(p){
+    var out={},k;
+    for(k in p){if(p[k]===undefined)continue;if(p[k]===null)delete ME[k];else ME[k]=p[k];out[k]=p[k]}
+    if(room){try{room.presence(out).catch(function(){})}catch(e){}}
+  }
+  function roster(){
+    var out=[],ps=[],i,p,mine=false;
+    if(room){try{ps=room.peers()||[]}catch(e){ps=[]}}
+    for(i=0;i<ps.length;i++){
+      p=ps[i];if(!p||p.kind==='agent')continue;
+      if(p.sameTab){myPeer=p.peer;mine=true;out.push({peer:p.peer,me:true,pr:ME})}
+      else out.push({peer:String(p.peer),me:false,pr:p.presence||{}});
+    }
+    if(!mine)out.push({peer:myPeer,me:true,pr:ME});
+    return out;
+  }
+  function players(){
+    return roster().filter(function(p){return typeof p.pr.n==='string'&&p.pr.n}).sort(function(a,b){return a.peer<b.peer?-1:a.peer>b.peer?1:0});
+  }
+  function colorOf(peer){var h=0,i;for(i=0;i<peer.length;i++)h=(h*31+peer.charCodeAt(i))>>>0;return PAL[h%PAL.length]}
+  function nameOf(p){return String(p.pr.n||'동료').slice(0,8)}
+  function teamTotal(){var run=HS.run,t=0;players().forEach(function(p){if(p.pr.vs===run)t+=num(p.pr.v)});return t}
+  function teamBad(){var run=HS.run,t=0;players().forEach(function(p){if(p.pr.vs===run)t+=num(p.pr.bad)});return t}
+  function cum(l,n){var s=0,i;for(i=0;i<l;i++)s+=need(i);return s*Math.max(1,n||1)}
+  function levelOf(total,n){var l=0;while(l<TOP-1&&total>=cum(l+1,n))l++;return l}
+  function teamCatch(){return num(HS.base)+(HS.sub==='play'?teamTotal():0)}
+  function score(n,k){var p={v:num(ME.v)+n};if(k)p[k]=num(ME[k])+n;setMe(p);hud()}
+
+  function dropHost(){setMe({h:null,ha:null,ph:null,sub:null,run:null,G:null,L:null,N:null,base:null,rem:null,lv:null});endAt=autoAt=0}
+  function claimHost(from){
+    setMe({h:1,ha:Date.now(),ph:from.ph,sub:from.sub,run:num(from.run),G:from.G,L:from.L,N:from.N,base:from.base,rem:from.rem,lv:from.lv});
+    endAt=from.sub==='play'&&from.rem!=null?Date.now()+num(from.rem)*1000+500:0;
+    autoAt=(from.sub==='win'||from.ph==='logo')&&NEXT[from.ph]?Date.now()+2000:0;
+  }
+  function hostGo(ph,sub,extra){
+    var cfg=PH[ph]||{},n=Math.max(1,players().length),p={ph:ph,sub:sub},k;
+    endAt=0;autoAt=0;
+    if(sub==='play'){
+      p.run=num(ME.run)+1;p.N=n;
+      p.G=cfg.goal?cfg.goal(n):null;p.L=cfg.lives?cfg.lives(n):null;p.rem=cfg.limit||null;
+      if(cfg.limit)endAt=Date.now()+cfg.limit*1000+500;
+    }
+    if(cfg.auto&&(sub==='win'||ph==='logo'))autoAt=Date.now()+cfg.auto;
+    if(extra)for(k in extra)p[k]=extra[k];
+    setMe(p);
+  }
+  function hostTick(){
+    var ph=ME.ph,sub=ME.sub,now=Date.now(),nx;
+    if(autoAt&&now>=autoAt){nx=NEXT[ph];if(nx){hostGo(nx[0],nx[1],nx[2])}else autoAt=0;return}
+    if(sub!=='play')return;
+    var t=teamTotal();
+    if(ph==='catch'){
+      var lv=levelOf(num(ME.base)+t,ME.N);
+      if(lv>=TOP-1)hostGo('logo','play');
+      else if(teamBad()>=num(ME.L))hostGo('catch','fail',{base:cum(lv,ME.N)});
+      return;
+    }
+    if(ME.G&&t>=ME.G){hostGo(ph,'win');return}
+    if(endAt){
+      var rem=clamp(Math.ceil((endAt-500-now)/1000),0,999);
+      if(rem!==ME.rem)setMe({rem:rem});
+      if(now>=endAt)hostGo(ph,'fail');
+    }
+  }
+  function apply(){
+    var key=HS.ph+'|'+HS.sub+'|'+HS.run;
+    if(key!==lastKey){lastKey=key;enter(HS)}
+  }
+  function sync(){
+    if(busy)return;busy=true;
+    try{
+      var list=roster(),host=null;
+      list.forEach(function(p){
+        var r=p.pr;if(r.h!==1||typeof r.ph!=='string')return;
+        if(!host||num(r.ha)>num(host.pr.ha)||(num(r.ha)===num(host.pr.ha)&&p.peer<host.peer))host=p;
+      });
+      if(ME.h===1&&host&&!host.me)dropHost();
+      HP=host;HS=host?host.pr:{};
+      if(host){
+        lostAt=0;LAST={ph:HS.ph,sub:HS.sub,run:HS.run,G:HS.G,L:HS.L,N:HS.N,base:HS.base,rem:HS.rem,lv:HS.lv};
+      }else if(joined&&LAST&&LAST.ph!=='lobby'){
+        // 방장이 사라지면 명단 맨 앞사람이 이어받는다
+        if(!lostAt)lostAt=Date.now();
+        var ps=players();
+        if(Date.now()-lostAt>2500&&ps.length&&ps[0].me){claimHost(LAST);HP={peer:myPeer,me:true,pr:ME};HS=ME}
+      }
+      if(HP&&joined){
+        apply();
+        if(ME.h===1){hostTick();apply()}
+      }
+      renderTeam();hud();
+    }finally{busy=false}
+  }
+
+  function renderTeam(){
+    var ps=players(),host=HP&&HP.peer,sig=ps.map(function(p){return p.peer+nameOf(p)+(p.pr.vs===HS.run?num(p.pr.v):0)+(p.peer===host)}).join('|')+net+joined+(ME.h===1);
+    if(sig!==renderTeam.sig){
+      renderTeam.sig=sig;
+      var bar=$('team'),ul=$('roster');bar.textContent='';ul.textContent='';
+      ps.forEach(function(p){
+        var el=document.createElement('span'),d=document.createElement('i'),n=document.createElement('span'),b=document.createElement('b');
+        el.className='pl'+(p.me?' me':'');el.style.setProperty('--pc',colorOf(p.peer));
+        n.textContent=nameOf(p);b.textContent=p.pr.vs===HS.run?num(p.pr.v):0;
+        el.appendChild(d);el.appendChild(n);el.appendChild(b);
+        if(p.peer===host){var s=document.createElement('small');s.textContent='방장';el.appendChild(s)}
+        bar.appendChild(el);
+        var li=document.createElement('li'),d2=document.createElement('i'),n2=document.createElement('span'),s2=document.createElement('small');
+        li.style.setProperty('--pc',colorOf(p.peer));n2.textContent=nameOf(p);s2.textContent=(p.me?'나':'')+(p.peer===host?(p.me?' · ':'')+'방장':'');
+        li.appendChild(d2);li.appendChild(n2);li.appendChild(s2);ul.appendChild(li);
+      });
+      $('lobbyInfo').textContent=net==='on'?'실시간 연결됨 · '+ps.length+'명 접속':net==='wait'?'연결하는 중입니다':'이 기기는 실시간 연결이 안 됩니다. 여기서는 혼자 진행됩니다.';
+    }
+    // 방장만 누를 수 있는 것들
+    var boss=ME.h===1,hn=HP?nameOf(HP):'',w='방장 '+hn+' 님이 누르기를 기다리는 중';
+    $('mGo').hidden=!boss;$('mWait').hidden=boss;$('mQuit').hidden=!(boss&&quitOn);
+    $('again').hidden=!boss;$('rWait').hidden=boss;
+    if($('mWait').textContent!==w){$('mWait').textContent=w;$('rWait').textContent=w}
+    $('force').hidden=!(boss&&HS.sub==='play'&&(HS.ph==='gift'||HS.ph==='candle'||HS.ph==='balloon'));
+    $('takeHost').hidden=!(joined&&HP&&!HP.me);
+  }
+
+  function hud(){
+    var ph=HS.ph,sub=HS.sub,play=sub==='play',t=teamTotal(),G=num(HS.G),no='Team',now='문승진 생일 작전',next=players().length+'명 접속',g=0,lives='',lv;
+    if(!joined||!ph||ph==='lobby'){}
+    else if(ph==='gift'){no='Step 1';now='선물 상자 '+t+' / '+G;next='같이 두드리기';g=G?t/G:0}
+    else if(ph==='candle'){no='Step 2';now='촛불 '+t+' / '+G;next='잡아서 끄기';g=G?t/G:0}
+    else if(ph==='bbang'){no='Step 3';now='생일빵 '+(sub==='intro'?'':t+' / '+G);next=play?'남은 시간 '+num(HS.rem)+'초':'30초 제한';g=sub!=='intro'&&G?t/G:0}
+    else if(ph==='balloon'){no='Step 4';now='풍선 '+t+' / '+G;next='터뜨리기';g=G?t/G:0}
+    else if(ph==='catch'){
+      var tot=teamCatch(),n=HS.N||players().length;lv=levelOf(tot,n);
+      no='N° '+pad(lv+1);now='문승진 '+RANKS[lv];next='다음 '+RANKS[lv+1];
+      g=(tot-cum(lv,n))/Math.max(1,cum(lv+1,n)-cum(lv,n));
+      if(sub!=='intro')lives='팀 멘탈 '+Math.max(0,num(HS.L)-teamBad());
+    }
+    else if(ph==='logo'){no='Final';now='회장 결정전';next='곧 시작'}
+    else if(ph==='duel'){no='Final';now='결정전 '+(sub==='intro'?'':t+' / '+G);next=play?'남은 시간 '+num(HS.rem)+'초':'30초 제한';g=sub!=='intro'&&G?t/G:0}
+    else if(ph==='end'){lv=clamp(num(HS.lv),0,TOP);no='N° '+pad(lv+1);now='문승진 '+RANKS[lv];next=lv>=TOP?'더 올라갈 곳 없음':'회장 직전';g=1}
+    $('rankNo').textContent=no;$('rankNow').textContent=now;$('rankNext').textContent=next;
+    $('gauge').style.width=clamp(g,0,1)*100+'%';
+    $('livesBox').hidden=!lives;$('livesBox').textContent=lives;
+    if(ph==='gift')$('giftTag').textContent=sub==='win'?'받는 분 · 문승진 (생일자)':'다 같이 두드려서 여세요 · '+t+' / '+G;
+  }
+
+  // 단계가 바뀔 때 화면을 그 단계로 맞춘다
+  var quitOn=false,relightT=null,candT=null;
+  function showScene(n){$('intro').hidden=false;$('intro').classList.add('popped');$('cakepop').hidden=true;['sc0','sc1','sc2','sc3'].forEach(function(id,i){$(id).hidden=i!==n})}
+  function enter(r){
+    var ph=r.ph,sub=r.sub,play=sub==='play';
+    if(play&&ME.vs!==r.run){
+      var reset={vs:r.run,v:0,bad:0};
+      if(ph==='bbang')reset.kb=0;else if(ph==='duel')reset.kd=0;else if(ph==='catch'&&!num(r.base))reset.kc=0;
+      setMe(reset);
+    }
+    ['lobby','intro','msg','result','promo','logoDrop'].forEach(function(id){$(id).hidden=true});
+    clearTimeout(relightT);clearTimeout(candT);candLoose=false;
+    S.mode='idle';S.view=ph==='bbang'?'bbang':(ph==='logo'||ph==='duel'||ph==='end')?'duel':'catch';
+    if(ph==='lobby')$('lobby').hidden=false;
+    else if(ph==='gift'){showScene(1);giftSet(sub==='win')}
+    else if(ph==='candle'){showScene(2);if(play)candleStart();else candleWin()}
+    else if(ph==='bbang'){bbangPlace();if(play)bbangStart();else panel(ph,sub)}
+    else if(ph==='balloon'){showScene(3);if(play)balloonStart();else balloonWin()}
+    else if(ph==='catch'){if(play)start();else{S.level=levelOf(num(r.base),r.N||players().length);panel(ph,sub)}}
+    else if(ph==='logo'){duelIdle();logoSlam()}
+    else if(ph==='duel'){if(play)duelStart();else if(sub==='win')duelWin();else{duelIdle();panel(ph,sub)}}
+    else if(ph==='end')showResult(clamp(num(r.lv),0,TOP));
+    hud();
+  }
+  function panel(ph,sub){
+    var n=Math.max(1,players().length),t=teamTotal(),G=num(HS.G),e='',ti='',le='',go='',hint='',legend=false;
+    quitOn=false;
+    if(ph==='bbang'){
+      e='Birthday Tradition';
+      if(sub==='intro'){ti='생일에는<br><em>생일빵</em>';le='각자 화면에서 도망다니는 승진이를 쫓아가 등짝을 때립니다. 30초 안에 팀 합계 '+PH.bbang.goal(n)+'대를 채워야 다음으로 넘어갑니다. 가까이 붙으면 알아서 때립니다.';go='때리러 가기';hint='손가락이나 마우스를 대면 그쪽으로 달려갑니다 · 키보드는 방향키'}
+      else if(sub==='win'){ti='생일빵<br><em>완료</em>';le='팀 합계 '+t+'대. 문승진 님은 한 살 더 단단해졌습니다.';go='선물 더 보기'}
+      else{ti='승진이가<br><em>도망쳤습니다</em>';le='팀 합계 '+t+'대. 30초 안에 '+G+'대를 채워야 넘어갈 수 있습니다.';go='다시 때리기'}
+    }else if(ph==='catch'){
+      e='The Promotion Game';
+      if(sub==='intro'){ti='승진이,<br><em>승진</em>하자';le='팀이 함께 문승진 님을 인턴에서 사장까지 올립니다. 한 번에 세 개씩, 세 배 빠르게 떨어집니다. 좋은 것만 받고 나쁜 것은 피하세요. 팀 멘탈 '+PH.catch.lives(n)+'이 바닥나면 승진 누락입니다.';go='출근하기';hint='손가락이나 마우스로 좌우 이동 · 키보드는 ← →';legend=true}
+      else{ti='승진<br><em>누락</em>';le=RANKS[S.level]+'에서 팀 멘탈이 바닥났습니다. '+RANKS[S.level]+'부터 다시 도전합니다.';go='다시 도전'}
+    }else if(ph==='duel'){
+      e='Final Round';
+      if(sub==='intro'){ti='최 회장과의<br><em>결정전</em>';le='회장 자리는 하나뿐입니다. 30초 안에 팀이 죽도로 합계 '+PH.duel.goal(n)+'점을 따내면 최 회장을 제치고 회장이 됩니다. 빛나는 빈틈을 누르면 한 점, 막힌 곳을 치면 잠시 굳습니다.';go='대련 시작';hint='머리 · 손목 · 허리 중 빛나는 곳을 누릅니다 · 키보드는 ↑ → ↓'}
+      else{ti='최 회장은<br><em>강했습니다</em>';le='팀 합계 '+t+'점에서 시간이 다 됐습니다. '+G+'점을 따야 회장 자리에 오릅니다.';go='재대결';quitOn=true}
+    }
+    $('mEyebrow').textContent=e;$('mTitle').innerHTML=ti;$('mLead').textContent=le;$('mGoT').textContent=go;
+    $('mLegend').hidden=!legend;$('mHint').hidden=!hint;$('mHint').textContent=hint;
+    renderTeam();$('msg').hidden=false;
+  }
+  $('mGo').addEventListener('click',function(){
+    if(ME.h!==1)return;audio();
+    var ph=ME.ph,sub=ME.sub;
+    if(ph==='bbang')hostGo(sub==='win'?'balloon':'bbang','play');
+    else if(ph==='catch')hostGo('catch','play');
+    else if(ph==='duel')hostGo('duel','play');
+    sync();
+  });
+  $('mQuit').addEventListener('click',function(){if(ME.h!==1)return;hostGo('end','show',{lv:TOP-1});sync()});
+  $('again').addEventListener('click',function(){if(ME.h!==1)return;hostGo('lobby','show');sync()});
+  $('force').addEventListener('click',function(){if(ME.h!==1||ME.sub!=='play')return;hostGo(ME.ph,'win');sync()});
+  $('takeHost').addEventListener('click',function(){if(LAST){claimHost(LAST);sync()}});
+  $('lobbyGo').addEventListener('click',function(){
+    audio();
+    if(ME.h!==1)claimHost(LAST||{ph:'lobby',sub:'show',run:0});
+    hostGo('gift','play');sync();
+  });
+  $('nick').addEventListener('input',function(){var v=this.value.trim().slice(0,8);if(joined)setMe({n:v||'동료'});renderTeam()});
+
+  // 웹에 직접 올렸을 때의 연결: 공개 MQTT 중계 서버에 각자 상태를 올리고 서로 구독한다.
+  // 같은 주소(같은 # 방 이름)를 연 사람끼리 한 팀이 된다.
+  function mqttRoom(done){
+    if(!window.mqtt||!/^https?:$/.test(location.protocol)){done(null);return}
+    var code=(location.hash||'').replace(/[^a-z0-9]/gi,'').slice(0,24)||'main';
+    var base='sjbday-k7q9x/'+code+'/',id=Math.random().toString(36).slice(2,10),mine={},others={},cb=null,timer=null,cl=null,ok=false;
+    var urls=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'],ui=0;
+    function pub(){timer=null;if(cl&&ok){try{cl.publish(base+id,JSON.stringify(mine),{retain:true})}catch(e){}}}
+    function fire(){if(cb)cb()}
+    var api={
+      presence:function(p){for(var k in p){if(p[k]===null)delete mine[k];else mine[k]=p[k]}if(!timer)timer=setTimeout(pub,80);return Promise.resolve()},
+      peers:function(){
+        var out=[{peer:id,sameTab:true,kind:'viewer',presence:mine}],now=Date.now(),k;
+        for(k in others)if(now-others[k].at<15000)out.push({peer:k,sameTab:false,kind:'viewer',presence:others[k].pr});
+        return out;
+      },
+      onPeers:function(f){cb=f}
+    };
+    function connect(){
+      try{cl=window.mqtt.connect(urls[ui],{clientId:'sj-'+id,clean:true,keepalive:20,connectTimeout:6000,reconnectPeriod:3000,will:{topic:base+id,payload:'',retain:true}})}catch(e){done(null);return}
+      var first=setTimeout(function(){if(ok)return;try{cl.end(true)}catch(e){}if(++ui<urls.length)connect();else done(null)},7000);
+      cl.on('connect',function(){
+        var was=ok;ok=true;clearTimeout(first);
+        cl.subscribe(base+'#');pub();
+        if(!was)done(api);
+      });
+      cl.on('message',function(topic,payload){
+        var k=String(topic).slice(base.length),s=String(payload);
+        if(!k||k===id)return;
+        if(!s){delete others[k];fire();return}
+        try{var o=JSON.parse(s);if(o&&typeof o==='object'&&!(o.hb&&Date.now()-o.hb>30000)){others[k]={pr:o,at:Date.now()};fire()}}catch(e){}
+      });
+      cl.on('error',function(){});
+    }
+    mine.hb=0;
+    setInterval(function(){mine.hb=Date.now();pub();fire()},5000);
+    window.addEventListener('pagehide',function(){try{cl.publish(base+id,'',{retain:true})}catch(e){}});
+    connect();
+  }
+  function useRoom(r){
+    if(!r){net='off';renderTeam();return}
+    room=r;net='on';
+    try{r.presence(ME).catch(function(){})}catch(e){}
+    r.onPeers(function(){sync()},function(){room=null;net='off';sync()});
+    sync();
+  }
+  if(window.claude&&typeof window.claude.use==='function'){
+    window.claude.use('room').then(function(r){if(r)useRoom(r);else mqttRoom(useRoom)}).catch(function(){mqttRoom(useRoom)});
+  }else mqttRoom(useRoom);
+  setInterval(sync,250);
+
+  // ───── 인트로: 공지 → 갑자기 케이크 → 대기실 ─────
+  var popped=false;
+  $('intro').addEventListener('pointerdown',function(e){
+    audio();if(e.target.closest('button'))return;
+    var b=stage.getBoundingClientRect();burst(e.clientX-b.left,e.clientY-b.top,14);beep(700+Math.random()*500,.06,'triangle',.04);
+  });
+  function popCake(){
+    if(popped||joined)return;
+    popped=true;
+    $('intro').classList.add('popped');$('cakepop').hidden=false;
+    if(!reduce)replay(stage,'quake');
+    burst(W/2,HH*.45,130);audio();fanfare();
+  }
+  setTimeout(function(){
+    var im=$('cakeImg');
+    if(im.complete)popCake();else{im.onload=im.onerror=popCake;setTimeout(popCake,2500)}
+  },2000);
+  $('cakeshot').addEventListener('click',function(e){
+    audio();replay(this,'boing');
+    var b=stage.getBoundingClientRect();burst(e.clientX?e.clientX-b.left:W/2,e.clientY?e.clientY-b.top:HH/2,30);
+    beep(520+Math.random()*400,.1,'triangle',.07);
+  });
+  $('nick').value='동료'+(10+Math.floor(Math.random()*90));
+  $('toLobby').addEventListener('click',function(){
+    audio();joined=true;
+    setMe({n:$('nick').value.trim().slice(0,8)||'동료',vs:0,v:0,bad:0,kb:0,kc:0,kd:0});
+    $('intro').hidden=true;$('cakepop').hidden=true;$('lobby').hidden=false;
+    lastKey='';sync();
+  });
+
+  // ───── 선물 상자 ─────
+  $('gift').addEventListener('pointerdown',function(){
+    if(HS.ph!=='gift'||HS.sub!=='play')return;
+    audio();var c=center(this);
+    replay(this,'shake');burst(c.x,c.y,10);beep(180+(num(ME.v)%8)*60,.1,'square',.06);
+    score(1);
+  });
+  function giftSet(open){
+    var g=$('gift');g.classList.toggle('open',open);
+    if(open){var c=center(g);burst(c.x,c.y-30,90);fanfare()}
+  }
+
+  // ───── 촛불: 처음에만 케이크 위에 있고, 그 뒤로는 계속 도망다닌다 ─────
+  var cands=[],candLoose=false,ptr=null;
+  function candHome(o){var ar=$('arena');return {x:ar.clientWidth/2+(o.i-2)*40-19,y:ar.clientHeight-190}}
+  function candPut(o){o.el.style.transform='translate('+o.x.toFixed(1)+'px,'+o.y.toFixed(1)+'px)'}
+  function candReset(lit){
+    cands.forEach(function(o){
+      var h=candHome(o);o.x=h.x;o.y=h.y;o.off=!lit;o.turn=0;
+      o.el.classList.toggle('off',!lit);o.el.classList.remove('loose');candPut(o);
+    });
+  }
+  function candRun(){
+    if(HS.ph!=='candle'||HS.sub!=='play')return;
+    candLoose=true;
+    cands.forEach(function(o){if(!o.off){o.el.classList.add('loose');o.turn=0}});
+  }
+  function candleStart(){
+    $('cakeTitle').innerHTML='촛불을 눌러서<br>같이 꺼 주세요';
+    candLoose=false;candReset(true);
+    candT=setTimeout(function(){$('cakeTitle').innerHTML='촛불이 도망갑니다<br>잡아서 꺼 주세요';candRun()},1000);
+  }
+  function candleWin(){
+    candLoose=false;candReset(false);
+    $('cakeTitle').innerHTML='생일 축하해, <em>승진아</em>';
+    tune();fireworks(5);
+  }
+  function candFrame(dt){
+    if(!candLoose)return;
+    var ar=$('arena'),w=ar.clientWidth,h=ar.clientHeight;if(!w)return;
+    cands.forEach(function(o){
+      if(o.off)return;
+      o.turn-=dt;
+      if(o.turn<=0){var a=Math.random()*Math.PI*2,sp=200+Math.random()*120;o.vx=Math.cos(a)*sp;o.vy=Math.sin(a)*sp;o.turn=.3+Math.random()*.55}
+      if(ptr){var dx=o.x+19-ptr.x,dy=o.y+40-ptr.y,d=Math.hypot(dx,dy);if(d>0&&d<95){o.vx+=dx/d*1100*dt;o.vy+=dy/d*1100*dt}}
+      o.x+=o.vx*dt;o.y+=o.vy*dt;
+      if(o.x<2){o.x=2;o.vx=Math.abs(o.vx)}else if(o.x>w-40){o.x=w-40;o.vx=-Math.abs(o.vx)}
+      if(o.y<0){o.y=0;o.vy=Math.abs(o.vy)}else if(o.y>h-90){o.y=h-90;o.vy=-Math.abs(o.vy)}
+      candPut(o);
+    });
+  }
+  function snuff(o){
+    if(o.off||HS.ph!=='candle'||HS.sub!=='play')return;
+    audio();var c=center(o.el),hm=candHome(o);
+    o.off=true;o.el.classList.add('off');o.el.classList.remove('loose');o.x=hm.x;o.y=hm.y;candPut(o);
+    burst(c.x,c.y-26,10,true);beep(500+(num(ME.v)%5)*60,.12,'triangle',.07);
+    score(1);
+    if(cands.every(function(k){return k.off})){
+      relightT=setTimeout(function(){
+        if(HS.ph!=='candle'||HS.sub!=='play')return;
+        $('cakeTitle').innerHTML='다시 붙었습니다<br>팀이 다 끌 때까지';
+        candReset(true);candRun();
+      },900);
+    }
+  }
+  [0,1,2,3,4].forEach(function(i){
+    var el=document.createElement('button'),o={el:el,i:i,x:0,y:0,vx:0,vy:0,off:false,turn:0};
+    el.type='button';el.className='candle';el.setAttribute('aria-label','촛불 끄기');
+    el.appendChild(document.createElement('i'));
+    el.addEventListener('pointerdown',function(e){e.preventDefault();snuff(o)});
+    el.addEventListener('click',function(){snuff(o)});
+    cands.push(o);$('arena').appendChild(el);
+  });
+  $('arena').addEventListener('pointermove',function(e){
+    if(e.pointerType!=='mouse'){ptr=null;return}
+    var r=this.getBoundingClientRect();ptr={x:e.clientX-r.left,y:e.clientY-r.top};
+  });
+  $('arena').addEventListener('pointerleave',function(){ptr=null});
+  window.addEventListener('resize',function(){cands.forEach(function(o){if(o.off||!candLoose){var h=candHome(o);o.x=h.x;o.y=h.y;candPut(o)}})});
+
+  // ───── 풍선 ─────
+  var MSG=['올','해','는','','승','진','하','자'],balLeft=0;
+  MSG.forEach(function(ch,i){var s=document.createElement('span');if(!ch)s.className='gap';s.id='slot'+i;$('slots').appendChild(s)});
+  function balloonStart(){
+    var box=$('balloons');box.textContent='';box.hidden=false;balLeft=0;$('balWait').hidden=true;
+    $('balTitle').innerHTML='풍선 안에 생일 선물이<br>숨어 있습니다';
+    MSG.forEach(function(ch,i){var s=$('slot'+i);s.textContent='';s.classList.remove('on')});
+    MSG.map(function(ch,i){return i}).filter(function(i){return MSG[i]}).sort(function(){return Math.random()-.5}).forEach(function(i,k){
+      var b=document.createElement('button');b.type='button';b.className='balloon b'+(k%3);b.textContent='?';
+      b.style.animationDelay=(-k*.37)+'s';b.setAttribute('aria-label','풍선 터뜨리기');balLeft++;
+      b.addEventListener('click',function(){
+        if(b.classList.contains('pop')||HS.ph!=='balloon'||HS.sub!=='play')return;
+        audio();var c=center(b);b.classList.add('pop');balLeft--;
+        burst(c.x,c.y,26);beep(900,.05,'square',.08);beep(140,.12,'sawtooth',.05);
+        var s=$('slot'+i);s.textContent=MSG[i];s.classList.add('on');
+        score(1);
+        if(!balLeft){$('balTitle').innerHTML='올해 생일 선물은<br><em>승진</em>입니다';box.hidden=true;$('balWait').hidden=false;fanfare()}
+      });
+      box.appendChild(b);
+    });
+  }
+  function balloonWin(){
+    MSG.forEach(function(ch,i){$('slot'+i).textContent=ch});
+    $('balTitle').innerHTML='올해 생일 선물은<br><em>승진</em>입니다';
+    $('balloons').hidden=true;$('balWait').hidden=true;fireworks(6);
+  }
+
+  // ───── 생일빵: 좁은 회의실에서 도망다니는 승진이를 쫓아가 등짝 때리기 ─────
+  var B={cd:0,swing:0,ptr:null,texts:[],
+    p:{x:0,y:0,vx:0,vy:0,ph:0,dir:1,back:true,moving:false},
+    s:{x:0,y:0,vx:0,vy:0,ph:0,dir:1,back:false,moving:false,inv:0,dash:0,hurt:0,mark:0,turn:1,turnT:0}};
+  var SLAP=['찰싹!','짝!','생일빵!','한 살 더!','등짝!'];
+  function arena(){var w=Math.min(W-28,520),h=Math.min(HH-56,470);return {x:(W-w)/2,y:(HH-h)/2+10,w:w,h:h}}
+  function desk(a){return {x:a.x+a.w/2-46,y:a.y+a.h/2-8,w:92,h:38}}
+  function pushOut(e,o,r){
+    var cx=clamp(e.x,o.x,o.x+o.w),cy=clamp(e.y,o.y,o.y+o.h),dx=e.x-cx,dy=e.y-cy,d=Math.hypot(dx,dy);
+    if(d===0){
+      var l=e.x-o.x,r2=o.x+o.w-e.x,t=e.y-o.y,b=o.y+o.h-e.y,m=Math.min(l,r2,t,b);
+      if(m===l)e.x=o.x-r;else if(m===r2)e.x=o.x+o.w+r;else if(m===t)e.y=o.y-r;else e.y=o.y+o.h+r;
+    }else if(d<r){e.x=cx+dx/d*r;e.y=cy+dy/d*r}
+  }
+  function bound(e,a,o){
+    pushOut(e,o,14);
+    e.x=clamp(e.x,a.x+16,a.x+a.w-16);e.y=clamp(e.y,a.y+34,a.y+a.h-6);
+  }
+  function stride(e,dt){
+    var sp=Math.hypot(e.vx,e.vy);e.moving=sp>25;
+    if(!e.moving)return;
+    e.ph+=dt*(8+sp/22);
+    if(Math.abs(e.vx)>20)e.dir=e.vx>0?1:-1;
+    e.back=e.vy<-30&&Math.abs(e.vy)>Math.abs(e.vx)*.8;
+  }
+  function bbangPlace(){
+    var a=arena(),p=B.p,s=B.s;
+    B.cd=0;B.swing=0;B.ptr=null;B.texts=[];
+    p.x=a.x+a.w/2;p.y=a.y+a.h-24;p.vx=p.vy=0;p.back=true;p.moving=false;
+    s.x=a.x+a.w/2;s.y=a.y+76;s.vx=s.vy=0;s.inv=s.dash=s.hurt=s.mark=0;s.back=false;s.moving=false;
+  }
+  function bbangStart(){audio();bbangPlace();S.mode='bbang'}
+  function bUpdate(dt){
+    var a=arena(),o=desk(a),p=B.p,s=B.s,PS=255;
+    B.cd-=dt;B.swing-=dt;s.inv-=dt;s.dash-=dt;s.hurt-=dt;s.mark-=dt;s.turnT-=dt;
+    // 쫓는 사람
+    var kx=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0),ky=(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0);
+    p.vx=p.vy=0;
+    if(kx||ky){var kl=Math.hypot(kx,ky);p.vx=kx/kl*PS;p.vy=ky/kl*PS;B.ptr=null}
+    else if(B.ptr){
+      var tx=B.ptr.x-p.x,ty=B.ptr.y-(p.y-26),td=Math.hypot(tx,ty);
+      if(td>5){var ps=Math.min(PS,td*9);p.vx=tx/td*ps;p.vy=ty/td*ps}
+    }
+    p.x+=p.vx*dt;p.y+=p.vy*dt;bound(p,a,o);stride(p,dt);
+    // 도망가는 승진이: 멀어지는 방향 + 옆으로 빠지기 + 벽·탁자 피하기
+    var dx=s.x-p.x,dy=s.y-p.y,d=Math.hypot(dx,dy)||1,fx2=dx/d,fy2=dy/d,m=66;
+    if(s.turnT<=0){s.turn=Math.random()<.5?-1:1;s.turnT=.8+Math.random()*1.2}
+    fx2+=-dy/d*s.turn*.55;fy2+=dx/d*s.turn*.55;
+    var wl=s.x-a.x,wr=a.x+a.w-s.x,wt=s.y-a.y-20,wb=a.y+a.h-s.y;
+    if(wl<m)fx2+=(1-wl/m)*2.2;if(wr<m)fx2-=(1-wr/m)*2.2;if(wt<m)fy2+=(1-wt/m)*2.2;if(wb<m)fy2-=(1-wb/m)*2.2;
+    var cx=clamp(s.x,o.x,o.x+o.w),cy=clamp(s.y,o.y,o.y+o.h),ox=s.x-cx,oy=s.y-cy,od=Math.hypot(ox,oy);
+    if(od>0&&od<48){fx2+=ox/od*(1-od/48)*2;fy2+=oy/od*(1-od/48)*2}
+    var fl=Math.hypot(fx2,fy2)||1,sp=s.dash>0?390:(d<120?224:d<230?176:70),k=Math.min(1,dt*(s.dash>0?3:7));
+    s.vx+=(fx2/fl*sp-s.vx)*k;s.vy+=(fy2/fl*sp-s.vy)*k;
+    s.x+=s.vx*dt;s.y+=s.vy*dt;bound(s,a,o);stride(s,dt);
+    // 등짝
+    dx=s.x-p.x;dy=s.y-p.y;d=Math.hypot(dx,dy)||1;
+    if(d<40&&B.cd<=0&&s.inv<=0){
+      B.cd=.5;B.swing=.24;s.inv=.9;s.dash=.5;s.hurt=.6;s.mark=1.4;
+      s.vx=dx/d*430;s.vy=dy/d*430;p.dir=dx>=0?1:-1;
+      B.texts.push({x:s.x,y:s.y-70,t:0,text:SLAP[Math.floor(Math.random()*SLAP.length)]});
+      burst(s.x,s.y-30,18);beep(1300,.04,'square',.09);beep(170,.14,'sawtooth',.08);
+      score(1,'kb');
+    }
+    for(var i=B.texts.length-1;i>=0;i--){B.texts[i].t+=dt;if(B.texts[i].t>.8)B.texts.splice(i,1)}
+  }
+
+  function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+
+  // 레고풍 미니피겨. (x,y)는 발 위치. 'sj'는 앞머리 있는 승진이, 'me'는 고깔모자 쓴 동료, 'ch'는 통통한 최 회장
+  function fig(x,y,e,kind,k){
+    var sw=e.moving?Math.sin(e.ph):0,la=Math.max(0,sw)*4,lb=Math.max(0,-sw)*4,sj=kind==='sj',ch=kind==='ch',me=kind==='me',back=e.back,d=e.dir;
+    var f=ch?1.3:1,hw=ch?11.5:10,torso=sj?C.wine:ch?C.navy:C.pistachio,legs=sj?C.hair:ch?C.navy:C.mint,edge=ch?C.hair:C.wine;
+    ctx.save();ctx.translate(x,y);if(k)ctx.scale(k,k);
+    ctx.fillStyle=k?'rgba(0,0,0,.3)':C.shade;ctx.beginPath();ctx.ellipse(0,1,17*f,5,0,0,Math.PI*2);ctx.fill();
+    if(!me&&e.hurt>0)ctx.scale(1.08,.9);
+    ctx.lineWidth=1.2;ctx.strokeStyle=edge;ctx.lineJoin='round';ctx.lineCap='round';
+    // 다리
+    ctx.fillStyle=legs;
+    ctx.fillRect(-13*f,-18,12*f,18-la);ctx.strokeRect(-13*f,-18,12*f,18-la);
+    ctx.fillRect(f,-18,12*f,18-lb);ctx.strokeRect(f,-18,12*f,18-lb);
+    ctx.fillRect(-13*f,-22,26*f,5);ctx.strokeRect(-13*f,-22,26*f,5);
+    // 팔
+    var hit=me&&B.swing>0;
+    function arm(side,hy){
+      var hx=side*(12*f+5),hyy=hy,r=3.6;
+      if(hit&&side===d){hx=side*27;hyy=-37;r=6}
+      if(e.saber&&side===d){hx=side*(12*f+8);hyy=e.hand}
+      ctx.strokeStyle=edge;ctx.lineWidth=8.4;ctx.beginPath();ctx.moveTo(side*12*f,-39);ctx.lineTo(hx,hyy);ctx.stroke();
+      ctx.strokeStyle=torso;ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(side*12*f,-39);ctx.lineTo(hx,hyy);ctx.stroke();
+      ctx.strokeStyle=edge;ctx.lineWidth=1.2;ctx.fillStyle=C.lego;ctx.beginPath();ctx.arc(hx,hyy+2,r,0,Math.PI*2);ctx.fill();ctx.stroke();
+    }
+    arm(-1,-26+sw*4);arm(1,-26-sw*4);
+    // 몸통
+    ctx.fillStyle=torso;ctx.beginPath();ctx.moveTo(-11*f,-42);ctx.lineTo(11*f,-42);ctx.lineTo(14*f,-22);ctx.lineTo(-14*f,-22);ctx.closePath();ctx.fill();ctx.stroke();
+    if(!back){
+      if(!me){
+        ctx.fillStyle=C.cream;ctx.beginPath();ctx.moveTo(-5,-42);ctx.lineTo(5,-42);ctx.lineTo(0,-33);ctx.closePath();ctx.fill();
+        ctx.fillStyle=ch?C.gilt:C.rose;ctx.beginPath();ctx.moveTo(0,-40);ctx.lineTo(2.2,-30);ctx.lineTo(0,-26.5);ctx.lineTo(-2.2,-30);ctx.closePath();ctx.fill();
+      }else{ctx.fillStyle=C.cream;ctx.fillRect(-12,-35,24,4)}
+    }else if(sj&&e.mark>0){
+      ctx.globalAlpha=Math.min(1,e.mark);ctx.fillStyle=C.cherry;
+      ctx.beginPath();ctx.arc(0,-30,4.2,0,Math.PI*2);ctx.fill();
+      ctx.fillRect(-4.6,-39,2,6);ctx.fillRect(-1.6,-40.5,2,7);ctx.fillRect(1.4,-40,2,7);ctx.fillRect(4.2,-37.5,2,5);
+      ctx.globalAlpha=1;
+    }
+    // 머리
+    ctx.fillStyle=C.lego;ctx.fillRect(-4,-45,8,4);
+    rr(-hw,-62,hw*2,18,6);ctx.fill();ctx.stroke();
+    if(!back){
+      var ex=d*1.5;
+      if(ch){
+        // 통통한 볼과 연한 눈썹
+        ctx.fillStyle=C.rose;ctx.globalAlpha=.55;ctx.beginPath();ctx.arc(-hw+3.5+ex,-48.5,3.2,0,Math.PI*2);ctx.arc(hw-3.5+ex,-48.5,3.2,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+        ctx.strokeStyle='rgba(46,10,23,.26)';ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(-6.2+ex,-55.4);ctx.lineTo(-2.4+ex,-56);ctx.moveTo(6.2+ex,-55.4);ctx.lineTo(2.4+ex,-56);ctx.stroke();
+      }
+      ctx.fillStyle=C.hair;ctx.strokeStyle=C.hair;ctx.lineWidth=1.4;
+      if(!me&&e.hurt>0){
+        ctx.beginPath();ctx.moveTo(-6.5+ex,-53.5);ctx.lineTo(-3.5+ex,-52);ctx.lineTo(-6.5+ex,-50.5);ctx.moveTo(6.5+ex,-53.5);ctx.lineTo(3.5+ex,-52);ctx.lineTo(6.5+ex,-50.5);ctx.stroke();
+        ctx.beginPath();ctx.ellipse(ex,-47.5,3,2.6,0,0,Math.PI*2);ctx.fill();
+      }else{
+        ctx.beginPath();ctx.arc(-4+ex,-52,1.5,0,Math.PI*2);ctx.arc(4+ex,-52,1.5,0,Math.PI*2);ctx.fill();
+        if(sj&&e.moving){ctx.beginPath();ctx.ellipse(ex,-47.5,2.2,2.6,0,0,Math.PI*2);ctx.fill()}
+        else{ctx.beginPath();ctx.arc(ex,-50,3.6,.2*Math.PI,.8*Math.PI);ctx.stroke()}
+      }
+    }
+    ctx.strokeStyle=C.wine;ctx.lineWidth=1.2;
+    if(sj){
+      // 적당한 길이의 머리. 앞에서는 앞머리, 뒤에서는 뒤통수를 덮는다
+      ctx.fillStyle=C.hair;ctx.beginPath();ctx.moveTo(-11.5,-50);ctx.lineTo(-11.5,-58);ctx.bezierCurveTo(-12,-71,12,-71,11.5,-58);
+      if(back){ctx.lineTo(11.5,-48);ctx.lineTo(7,-46.5);ctx.lineTo(3,-48);ctx.lineTo(-1,-46.5);ctx.lineTo(-5,-48);ctx.lineTo(-8.5,-46.5);ctx.lineTo(-11.5,-48)}
+      else{ctx.lineTo(11.5,-50);ctx.lineTo(9.5,-56);ctx.lineTo(6.5,-54);ctx.lineTo(3.5,-56.5);ctx.lineTo(.5,-54);ctx.lineTo(-2.5,-56.5);ctx.lineTo(-6,-54);ctx.lineTo(-9.5,-56)}
+      ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(255,248,241,.28)';ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(-2,-58,8,1.15*Math.PI,1.6*Math.PI);ctx.stroke();
+    }else if(ch){
+      // 단정한 가르마 머리
+      ctx.fillStyle=C.hair;ctx.beginPath();ctx.moveTo(-hw-1,-54.5);ctx.lineTo(-hw-1,-58);ctx.bezierCurveTo(-hw-1,-69.5,hw+1,-69.5,hw+1,-58);
+      ctx.lineTo(hw+1,-54.5);ctx.lineTo(hw-1.5,-58.4);ctx.lineTo(-hw+6,-60);ctx.lineTo(-hw+2.5,-57.6);ctx.closePath();ctx.fill();
+    }else{
+      ctx.fillStyle=C.hair;rr(-11,-64,22,6,3);ctx.fill();
+      ctx.fillStyle=C.rose;ctx.beginPath();ctx.moveTo(-8,-62);ctx.lineTo(8,-62);ctx.lineTo(0,-82);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle=C.cream;ctx.beginPath();ctx.arc(0,-83,3,0,Math.PI*2);ctx.fill();ctx.stroke();
+    }
+    if(e.crown){
+      ctx.fillStyle=C.gilt;ctx.strokeStyle=C.hair;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-9,-67);ctx.lineTo(-9,-77);ctx.lineTo(-4.5,-72);ctx.lineTo(0,-79);ctx.lineTo(4.5,-72);ctx.lineTo(9,-77);ctx.lineTo(9,-67);ctx.closePath();ctx.fill();ctx.stroke();
+    }
+    if(e.saber&&!e.down){
+      // 죽도 모양의 광선검: 손잡이, 빛나는 날, 죽도 매듭 두 줄
+      ctx.save();ctx.translate(d*(12*f+8),e.hand+2);ctx.rotate(e.saber.ang);
+      ctx.lineCap='round';ctx.strokeStyle=C.cream;ctx.lineWidth=3.4;ctx.beginPath();ctx.moveTo(-5,0);ctx.lineTo(5,0);ctx.stroke();
+      ctx.shadowColor=e.saber.color;ctx.shadowBlur=18;ctx.strokeStyle=e.saber.color;ctx.lineWidth=4.4;ctx.beginPath();ctx.moveTo(7,0);ctx.lineTo(46,0);ctx.stroke();
+      ctx.stroke();ctx.shadowBlur=0;
+      ctx.strokeStyle=C.cream;ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(7,0);ctx.lineTo(45,0);ctx.stroke();
+      ctx.lineCap='butt';ctx.strokeStyle=e.saber.color;ctx.lineWidth=4.4;ctx.beginPath();ctx.moveTo(19,0);ctx.lineTo(20.4,0);ctx.moveTo(33,0);ctx.lineTo(34.4,0);ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  function bubble(x,y,text){
+    ctx.font='600 12px "Hahmlet","Nanum Myeongjo",serif';
+    var w=ctx.measureText(text).width+16;x=clamp(x,w/2+4,W-w/2-4);
+    ctx.fillStyle=C.cream;rr(x-w/2,y-11,w,22,11);ctx.fill();ctx.strokeStyle=C.wine;ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle=C.wine;ctx.fillText(text,x,y+1);
+  }
+  function bDraw(){
+    ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,HH);
+    var a=arena(),o=desk(a),p=B.p,s=B.s,i,j;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    // 바닥 타일과 벽. 윗벽이 남은 시간을 보여 준다
+    ctx.save();ctx.beginPath();ctx.rect(a.x,a.y,a.w,a.h);ctx.clip();
+    ctx.fillStyle=C.floor;ctx.fillRect(a.x,a.y,a.w,a.h);
+    ctx.fillStyle=C.tile;
+    for(i=0;i*40<a.w;i++)for(j=0;j*40<a.h;j++)if((i+j)%2)ctx.fillRect(a.x+i*40,a.y+20+j*40,40,40);
+    ctx.fillStyle=C.rose;ctx.fillRect(a.x,a.y,a.w,20);
+    ctx.fillStyle=C.wine;ctx.fillRect(a.x,a.y,a.w*clamp(num(HS.rem)/PH.bbang.limit,0,1),20);
+    ctx.restore();
+    ctx.strokeStyle=C.wine;ctx.lineWidth=1.5;ctx.strokeRect(a.x,a.y,a.w,a.h);
+    ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(a.x,a.y+20);ctx.lineTo(a.x+a.w,a.y+20);ctx.stroke();
+    ctx.font='500 11px "Gothic A1","Malgun Gothic",sans-serif';ctx.fillStyle=C.soft;
+    if(a.y>24)ctx.fillText('제3회의실 · 생일빵 전용',W/2,a.y-11);
+    // 깊이 순서대로: 탁자, 두 사람
+    var list=[{y:o.y+o.h,k:'desk'},{y:p.y,k:'me'},{y:s.y,k:'sj'}].sort(function(x,y){return x.y-y.y});
+    list.forEach(function(it){
+      if(it.k==='me')fig(p.x,p.y,p,'me');
+      else if(it.k==='sj'){if(!(s.inv>0&&Math.floor(s.inv*14)%2&&s.hurt<=0))fig(s.x,s.y,s,'sj')}
+      else{
+        var ty=o.y-14,cx=o.x+o.w/2,cy=ty+o.h/2;
+        ctx.strokeStyle=C.wine;ctx.lineWidth=1.2;
+        ctx.fillStyle=C.shade;ctx.beginPath();ctx.ellipse(cx,o.y+o.h+2,o.w/2+2,6,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=C.rose;ctx.fillRect(o.x-2,ty+o.h-4,o.w+4,18);ctx.strokeRect(o.x-2,ty+o.h-4,o.w+4,18);
+        ctx.fillStyle=C.cream;rr(o.x-2,ty,o.w+4,o.h,5);ctx.fill();ctx.stroke();
+        ctx.fillStyle=C.rose;ctx.beginPath();ctx.ellipse(cx,cy+7,17,5,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+        ctx.fillStyle=C.cream;rr(cx-11,cy-9,22,15,3);ctx.fill();ctx.stroke();
+        ctx.fillStyle=C.rose;ctx.fillRect(cx-10.4,cy-8.4,20.8,4.5);
+        ctx.fillStyle=C.cherry;ctx.beginPath();ctx.arc(cx,cy-11,2.6,0,Math.PI*2);ctx.fill();
+      }
+    });
+    var dd=Math.hypot(s.x-p.x,s.y-p.y);
+    if(s.hurt>0)bubble(s.x,s.y-84,'아야!');else if(dd>190&&S.mode==='bbang')bubble(s.x,s.y-84,'메롱');
+    ctx.font='800 22px "Hahmlet","Nanum Myeongjo",serif';ctx.lineJoin='round';
+    B.texts.forEach(function(t){
+      ctx.globalAlpha=1-t.t/.8;ctx.lineWidth=5;ctx.strokeStyle=C.cream;
+      var tx=clamp(t.x,50,W-50),ty=t.y-t.t*46;
+      ctx.strokeText(t.text,tx,ty);ctx.fillStyle=C.cherry;ctx.fillText(t.text,tx,ty);ctx.globalAlpha=1;
+    });
+  }
+
+  // ───── 회장 결정전: 광선검 같은 죽도로 최 회장의 빈틈(머리·손목·허리)을 친다 ─────
+  var D={zone:-1,last:-1,zt:0,ztMax:1,gap:.9,stun:0,lunge:0,sz:0,taunt:0,won:false,texts:[],
+    sj:{dir:1,moving:false,ph:0,back:false,hurt:0,mark:0,hand:-33,crown:false,saber:{ang:-.95,color:'#4FCB8F'}},
+    ch:{dir:-1,moving:false,ph:0,back:false,hurt:0,mark:0,hand:-34,down:false,saber:{ang:-2.27,color:'#F0365F'}}};
+  var ZN=['머리','손목','허리'],POSE=[[2.67,-30],[-1.32,-36],[-1.9,-47]],GUARD=[-2.27,-34];
+  function geom(){
+    var k=clamp(Math.min(W/175,(HH-150)/130),1.3,3),fy=Math.min(HH-44,HH/2+52*k),cx=W/2+44*k;
+    return {k:k,fy:fy,px:W/2-44*k,cx:cx,zones:[{x:cx,y:fy-53*k},{x:cx-23.6*k,y:fy+(D.ch.hand+2)*k},{x:cx,y:fy-27*k}]};
+  }
+  function duelIdle(){D.zone=-1;D.won=false;D.ch.down=false;D.ch.hurt=0;D.sj.hurt=0;D.sj.crown=false;D.texts=[];D.stun=0;D.lunge=0}
+  function duelStart(){audio();duelIdle();D.last=-1;D.gap=.9;D.taunt=0;S.mode='duel'}
+  function duelWin(){
+    D.won=true;D.zone=-1;D.ch.down=true;D.ch.hurt=9;D.sj.crown=true;D.texts=[];
+    S.level=TOP;S.mode='promo';S.promo=2.6;$('promo').classList.remove('top');
+    $('promoT').textContent='문승진 회장 승진';$('promoR').textContent='사유 · 팀이 죽도로 최 회장을 이김';
+    $('promo').hidden=false;fanfare();fireworks(6);
+  }
+  function strike(z){
+    if(S.mode!=='duel'||D.stun>0||D.lunge>0)return;
+    var g=geom(),zp=g.zones[z];
+    D.lunge=.24;D.sz=z;
+    if(z===D.zone){
+      D.zone=-1;D.gap=.32+Math.random()*.28;D.ch.hurt=.4;
+      D.texts.push({x:zp.x,y:zp.y-34,t:0,text:ZN[z]+'!'});
+      burst(zp.x,zp.y,22);beep(980,.06,'square',.08);beep(1480,.12,'triangle',.08);
+      score(1,'kd');
+    }else{
+      D.stun=.6;D.sj.hurt=.3;
+      var mx=(g.px+g.cx)/2,my=g.fy-44*g.k;
+      D.texts.push({x:mx,y:my-20,t:0,text:'챙!'});
+      burst(mx,my,12);beep(2100,.05,'square',.06);beep(240,.16,'sawtooth',.07);
+    }
+  }
+  function turnTo(cur,goal,r){return cur+(goal-cur)*r}
+  function dUpdate(dt){
+    var c=D.ch,s=D.sj,g=geom();
+    D.stun-=dt;D.lunge-=dt;D.taunt-=dt;c.hurt-=dt;s.hurt-=dt;
+    if(D.zone<0){
+      D.gap-=dt;
+      if(D.gap<=0){
+        do{D.zone=Math.floor(Math.random()*3)}while(D.zone===D.last);
+        D.last=D.zone;D.ztMax=D.zt=Math.max(.55,1.15-num(ME.v)*.04);
+      }
+    }else{
+      D.zt-=dt;
+      if(D.zt<=0){D.zone=-1;D.gap=.3+Math.random()*.3;D.taunt=.6}
+    }
+    var pose=D.zone<0?GUARD:POSE[D.zone],r=Math.min(1,dt*16);
+    c.saber.ang=turnTo(c.saber.ang,pose[0]>0?pose[0]-Math.PI*2:pose[0],r);c.hand=turnTo(c.hand,pose[1],r);
+    var rest=-.95;
+    if(D.lunge>0){
+      var zp=g.zones[D.sz],hx=g.px+20*g.k,hy=g.fy+(s.hand+2)*g.k;
+      rest=Math.atan2(zp.y-hy,zp.x-hx);
+    }else if(D.stun>0)rest=-1.9;
+    s.saber.ang=turnTo(s.saber.ang,rest,Math.min(1,dt*24));
+    for(var i=D.texts.length-1;i>=0;i--){D.texts[i].t+=dt;if(D.texts[i].t>.8)D.texts.splice(i,1)}
+  }
+  function dDraw(){
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    var g=geom(),k=g.k,now=performance.now()/1000;
+    var bg=ctx.createRadialGradient(W/2,g.fy-50*k,10,W/2,g.fy-50*k,Math.max(W,HH)*.75);
+    bg.addColorStop(0,'#5A1830');bg.addColorStop(1,'#1E0610');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,HH);
+    ctx.fillStyle='#2C0B18';ctx.fillRect(0,g.fy+3,W,HH-g.fy);
+    ctx.fillStyle='rgba(229,159,176,.5)';ctx.fillRect(0,g.fy+3,W,1);
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='800 '+Math.min(150,W*.34)+'px "Hahmlet","Nanum Myeongjo",serif';
+    ctx.fillStyle='rgba(255,248,241,.05)';ctx.fillText('회장',W/2,g.fy-70*k);
+    var off=D.lunge>0?Math.sin(Math.PI*(1-D.lunge/.24))*16*k:0,rec=!D.won&&D.ch.hurt>0?D.ch.hurt/.4*6*k:0;
+    if(D.won){
+      ctx.save();ctx.translate(g.cx+12*k,g.fy);ctx.rotate(1.25);fig(0,-6*k,D.ch,'ch',k);ctx.restore();
+    }else fig(g.cx+rec,g.fy,D.ch,'ch',k);
+    fig(g.px+off,g.fy,D.sj,'sj',k);
+    ctx.font='500 12px "Gothic A1","Malgun Gothic",sans-serif';ctx.fillStyle='rgba(255,248,241,.7)';
+    ctx.fillText(D.won?'문승진 회장':'문승진 사장',g.px,g.fy+22);ctx.fillText(D.won?'최 전 회장':'최 회장',g.cx,g.fy+22);
+    if(S.mode==='duel'){
+      g.zones.forEach(function(z,i){
+        var x=z.x+rec,open=i===D.zone,lx=i===1?x-(46+k*4):x+(46+k*4);
+        if(open){
+          var rad=15+k*4+Math.sin(now*14)*2.5;
+          ctx.shadowColor=C.gilt;ctx.shadowBlur=18;ctx.strokeStyle='#FFD978';ctx.lineWidth=3;
+          ctx.beginPath();ctx.arc(x,z.y,rad,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;
+          ctx.strokeStyle=C.cream;ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,z.y,rad+6,-Math.PI/2,-Math.PI/2+Math.PI*2*clamp(D.zt/D.ztMax,0,1));ctx.stroke();
+          bubble(clamp(lx,30,W-30),z.y,ZN[i]);
+        }else{
+          ctx.strokeStyle='rgba(255,248,241,.28)';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(x,z.y,7+k*2,0,Math.PI*2);ctx.stroke();
+        }
+      });
+      if(D.stun>0)bubble(g.px,g.fy-80*k,'앗');
+      else if(D.taunt>0)bubble(g.cx,g.fy-80*k,'허허');
+    }else if(D.won)bubble(g.cx+10*k,g.fy-44*k,'졌소…');
+    ctx.font='800 '+Math.round(16+k*5)+'px "Hahmlet","Nanum Myeongjo",serif';ctx.lineJoin='round';
+    D.texts.forEach(function(t){
+      ctx.globalAlpha=1-t.t/.8;ctx.lineWidth=5;ctx.strokeStyle=C.cherry;
+      var tx=clamp(t.x,50,W-50),ty=t.y-t.t*46;
+      ctx.strokeText(t.text,tx,ty);ctx.fillStyle=C.cream;ctx.fillText(t.text,tx,ty);ctx.globalAlpha=1;
+    });
+  }
+
+  // 결정전 직전: 회사 로고가 화면에 쾅 떨어진다
+  function logoSlam(){
+    var box=$('logoDrop'),im=$('logoImg');
+    box.hidden=false;im.style.animation='none';void im.offsetWidth;im.style.animation='';
+    setTimeout(function(){
+      if(box.hidden)return;
+      if(!reduce)replay(stage,'quake');
+      burst(W/2,HH/2,170);audio();boom();
+    },reduce?0:390);
+  }
+
+  // ───── 승진 게임: 한 번에 세 개씩, 세 배 빠르게 ─────
+  function start(){
+    audio();
+    S.mode='play';S.items=[];S.pops=[];S.spawn=.6;
+    S.px=S.target=W/2;S.level=levelOf(teamCatch(),HS.N);
+  }
+  function spawn(){
+    var l=S.level,lanes=[0,1,2].sort(function(){return Math.random()-.5}),pb=Math.min(.6,.38+l*.02),nb=0,lw=W/3,i;
+    ctx.font=CHIP;
+    for(i=0;i<3;i++){
+      var it={y:-30-Math.random()*50,x:0,kind:'good',text:''},r=Math.random();
+      if(nb<2&&r<pb){it.kind='bad';nb++;it.text=BAD[Math.floor(Math.random()*BAD.length)]}
+      else if(r>.965){it.kind='cake';it.text='생일 케이크'}
+      else it.text=GOOD[Math.floor(Math.random()*GOOD.length)];
+      it.w=ctx.measureText(it.text).width+28;
+      it.x=clamp(lanes[i]*lw+lw/2+(Math.random()-.5)*Math.max(0,lw-it.w)*.8,it.w/2+8,W-it.w/2-8);
+      it.v=(150+l*16+Math.random()*40)*(HH/560)*3.3;
+      S.items.push(it);
+    }
+  }
+  function promote(){
+    // 게임은 멈추지 않는다. 배경 직급이 바뀌고 맨 위에 잠깐 알림만 뜬다
+    S.pop=1.5;$('promo').classList.add('top');
+    $('promoT').textContent='문승진 '+RANKS[S.level]+' 승진';
+    $('promoR').textContent='사유 · '+REASONS[S.level];
+    $('promo').hidden=false;fanfare();burst(S.px,HH-100,40);
+  }
+  function note(l){
+    if(l===TOP)return '팀이 최 회장을 죽도로 제치고 문승진 회장 취임. 드디어 이름값을 했습니다. 생일 축하해, 올해는 진짜 승진하자.';
+    if(l===TOP-1)return '최 회장의 죽도에 막혔습니다. 회장까지 한 끗 차이였습니다.';
+    return '여기까지 올렸습니다. 생일 축하합니다.';
+  }
+  function showResult(lv){
+    S.level=lv;D.won=lv>=TOP;D.ch.down=D.won;D.sj.crown=D.won;if(D.won)D.ch.hurt=9;
+    var ps=players();
+    $('resRank').textContent=RANKS[lv];
+    $('resTeam').textContent=ps.length+'명';
+    $('resNote').textContent=note(lv);
+    $('seal').textContent=lv>=TOP?'승진':'누락';
+    var ol=$('board').querySelector('ol');ol.textContent='';
+    ps.forEach(function(p){
+      var li=document.createElement('li'),d=document.createElement('i'),n=document.createElement('span'),r=document.createElement('b');
+      li.style.setProperty('--pc',colorOf(p.peer));
+      n.textContent=nameOf(p)+(p.me?' (나)':'');
+      r.textContent='등짝 '+num(p.pr.kb)+' · 받기 '+num(p.pr.kc)+' · 검도 '+num(p.pr.kd);
+      li.appendChild(d);li.appendChild(n);li.appendChild(r);ol.appendChild(li);
+    });
+    renderTeam();$('result').hidden=false;
+    if(lv>=TOP)fireworks(6);
+  }
+
+  function update(dt){
+    candFrame(dt);
+    if(S.mode==='bbang'){bUpdate(dt);return}
+    if(S.mode==='duel'){dUpdate(dt);return}
+    if(S.mode==='promo'){
+      S.promo-=dt;
+      if(S.promo<=0){$('promo').hidden=true;S.mode=HS.ph==='catch'&&HS.sub==='play'?'play':'idle'}
+      return;
+    }
+    if(S.mode!=='play')return;
+    var lv=levelOf(teamCatch(),HS.N);
+    if(lv>S.level){S.level=lv;promote()}
+    if(S.pop>0){S.pop-=dt;if(S.pop<=0)$('promo').hidden=true}
+    var k=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0);
+    if(k)S.target=S.px+k*460*dt*3;
+    S.target=clamp(S.target,30,W-30);
+    S.px+=(S.target-S.px)*Math.min(1,dt*18);
+    S.spawn-=dt;
+    if(S.spawn<=0){spawn();S.spawn=Math.max(.5,.9-S.level*.04)}
+    var gy=HH-22;
+    for(var i=S.items.length-1;i>=0;i--){
+      var it=S.items[i],py=it.y;it.y+=it.v*dt;
+      if(py>HH+30){S.items.splice(i,1);continue}
+      // 빨리 떨어져도 지나치지 않도록 이번 프레임에 지나간 구간으로 판정한다
+      if(Math.abs(it.x-S.px)<it.w/2+26&&it.y>gy-104&&py<gy+6){
+        S.items.splice(i,1);
+        if(it.kind==='bad'){
+          beep(110,.3,'sawtooth',.08);
+          S.pops.push({x:S.px,y:gy-124,t:0,text:it.text+'…',bad:true});
+          if(!reduce)replay(stage,'hit');
+          setMe({bad:num(ME.bad)+1});hud();
+        }else if(it.kind==='cake'){
+          beep(880,.2,'triangle',.08);
+          S.pops.push({x:S.px,y:gy-124,t:0,text:'팀 멘탈 회복'});burst(S.px,gy-90,16);
+          setMe({bad:Math.max(0,num(ME.bad)-1)});hud();
+        }else{
+          beep(660+(num(ME.v)%6)*40,.08,'square',.05);
+          S.pops.push({x:S.px,y:gy-124,t:0,text:'+'+it.text});
+          score(1,'kc');
+        }
+      }
+    }
+    for(var j=S.pops.length-1;j>=0;j--){S.pops[j].t+=dt;if(S.pops[j].t>.7)S.pops.splice(j,1)}
+  }
+
+  function drawPlayer(x,gy){
+    var exec=S.level>=7,hy=gy-78;
+    ctx.fillStyle=C.shade;ctx.beginPath();ctx.ellipse(x,gy+3,32,5,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=C.wine;ctx.beginPath();ctx.moveTo(x-25,gy);ctx.lineTo(x-25,gy-42);ctx.arcTo(x-25,gy-56,x-11,gy-56,14);ctx.lineTo(x+11,gy-56);ctx.arcTo(x+25,gy-56,x+25,gy-42,14);ctx.lineTo(x+25,gy);ctx.closePath();ctx.fill();
+    ctx.fillStyle=C.cream;ctx.beginPath();ctx.moveTo(x-11,gy-56);ctx.lineTo(x+11,gy-56);ctx.lineTo(x,gy-30);ctx.closePath();ctx.fill();
+    ctx.fillStyle=exec?C.gilt:C.rose;ctx.beginPath();ctx.moveTo(x-4,gy-54);ctx.lineTo(x+4,gy-54);ctx.lineTo(x+5,gy-28);ctx.lineTo(x,gy-21);ctx.lineTo(x-5,gy-28);ctx.closePath();ctx.fill();
+    ctx.save();ctx.beginPath();ctx.arc(x,hy,24,0,Math.PI*2);ctx.closePath();
+    if(faceImg){ctx.clip();ctx.drawImage(faceImg,x-24,hy-24,48,48)}
+    else{
+      ctx.fillStyle=C.skin;ctx.fill();ctx.clip();
+      ctx.fillStyle=C.hair;ctx.beginPath();ctx.ellipse(x,hy-22,30,15,0,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(x-8,hy+2,2.4,0,Math.PI*2);ctx.arc(x+8,hy+2,2.4,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=C.rose;ctx.globalAlpha=.7;ctx.beginPath();ctx.arc(x-14,hy+9,4,0,Math.PI*2);ctx.arc(x+14,hy+9,4,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+      ctx.strokeStyle=C.hair;ctx.lineWidth=1.6;ctx.lineCap='round';ctx.beginPath();ctx.arc(x,hy+7,6,.15*Math.PI,.85*Math.PI);ctx.stroke();
+    }
+    ctx.restore();
+    ctx.strokeStyle=C.wine;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,hy,24,0,Math.PI*2);ctx.stroke();
+  }
+  function draw(){
+    if(S.view==='bbang'){bDraw();return}
+    if(S.view==='duel'){dDraw();return}
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,W,HH);
+    var gy=HH-22;
+    ctx.fillStyle=C.blush;ctx.fillRect(0,gy,W,22);
+    ctx.fillStyle=C.rule;ctx.fillRect(0,gy,W,1);
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='800 '+Math.min(130,W*.32)+'px "Hahmlet","Nanum Myeongjo",serif';
+    ctx.fillStyle=C.ghost;ctx.fillText(RANKS[S.level],W/2,HH*.42);
+    ctx.font=CHIP;
+    S.items.forEach(function(it){
+      ctx.fillStyle=it.kind==='bad'?C.wine:it.kind==='cake'?C.rose:C.pistachio;
+      rr(it.x-it.w/2,it.y-16,it.w,32,16);ctx.fill();
+      ctx.strokeStyle=C.wine;ctx.lineWidth=1;ctx.stroke();
+      ctx.fillStyle=it.kind==='bad'?C.blush:C.wine;ctx.fillText(it.text,it.x,it.y+1);
+    });
+    if(S.mode==='play'||S.mode==='promo')drawPlayer(S.px,gy);
+    ctx.font=CHIP;
+    S.pops.forEach(function(p){
+      ctx.globalAlpha=1-p.t/.7;ctx.fillStyle=p.bad?C.cherry:C.wine;
+      ctx.fillText(p.text,clamp(p.x,60,W-60),p.y-p.t*40);ctx.globalAlpha=1;
+    });
+  }
+
+  var last=0;
+  function loop(t){
+    var dt=Math.min(.05,(t-last)/1000||0);last=t;
+    update(dt);draw();fxStep(dt);requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  function point(e){var r=cv.getBoundingClientRect();S.target=e.clientX-r.left;if(S.mode==='bbang')B.ptr={x:e.clientX-r.left,y:e.clientY-r.top}}
+  cv.addEventListener('pointerdown',function(e){
+    audio();point(e);try{cv.setPointerCapture(e.pointerId)}catch(_){}
+    if(S.mode!=='duel')return;
+    var r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,g=geom(),best=-1,bd=Math.max(44,24*g.k);
+    g.zones.forEach(function(z,i){var dd=Math.hypot(z.x-x,z.y-y);if(dd<bd){bd=dd;best=i}});
+    if(best>=0)strike(best);
+  });
+  cv.addEventListener('pointermove',point);
+  window.addEventListener('keydown',function(e){
+    if(e.target&&e.target.tagName==='INPUT')return;
+    keys[e.key]=true;
+    var arrow=e.key.indexOf('Arrow')===0;
+    if((S.mode==='play'||S.mode==='bbang'||S.mode==='duel')&&arrow)e.preventDefault();
+    if(S.mode==='duel'&&!e.repeat){var z={ArrowUp:0,ArrowRight:1,ArrowDown:2}[e.key];if(z!==undefined)strike(z)}
+  });
+  window.addEventListener('keyup',function(e){keys[e.key]=false});
+  $('mute').addEventListener('click',function(){muted=!muted;this.textContent=muted?'소리 꺼짐':'소리 켜짐'});
+
+  function loadFace(src){var im=new Image();im.onload=function(){faceImg=im};im.src=src}
+  $('face').addEventListener('change',function(){
+    var f=this.files&&this.files[0];if(!f)return;
+    var fr=new FileReader();
+    fr.onload=function(){
+      var im=new Image();
+      im.onload=function(){
+        var c=document.createElement('canvas'),s=Math.min(im.width,im.height);c.width=c.height=160;
+        c.getContext('2d').drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,160,160);
+        var url=c.toDataURL('image/jpeg',.8);store('sj-face',url);loadFace(url);
+      };
+      im.src=fr.result;
+    };
+    fr.readAsDataURL(f);
+  });
+  var sf=store('sj-face');if(sf)loadFace(sf);
+  renderTeam();hud();
+})();
+</script>
+
+</body>
+</html>
