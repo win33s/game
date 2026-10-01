@@ -607,7 +607,7 @@ h1 em::after{content:"";position:absolute;left:-.04em;right:-.04em;bottom:.04em;
       else{ti='승진<br><em>누락</em>';le=RANKS[S.level]+'에서 팀 멘탈이 바닥났습니다. '+RANKS[S.level]+'부터 다시 도전합니다.';go='다시 도전'}
     }else if(ph==='duel'){
       e='Final Round';
-      if(sub==='intro'){ti='최 회장과의<br><em>결정전</em>';le='회장 자리는 하나뿐입니다. 30초 안에 팀이 죽도로 합계 '+PH.duel.goal(n)+'점을 따내면 최 회장을 제치고 회장이 됩니다. 빛나는 빈틈을 누르면 한 점, 막힌 곳을 치면 잠시 굳습니다.';go='대련 시작';hint='머리 · 손목 · 허리 중 빛나는 곳을 누릅니다 · 키보드는 ↑ → ↓'}
+      if(sub==='intro'){ti='최 회장과의<br><em>결정전</em>';le='회장 자리는 하나뿐입니다. 30초 안에 팀이 죽도로 합계 '+PH.duel.goal(n)+'점을 따내면 최 회장을 제치고 회장이 됩니다. 빛나는 빈틈을 누르면 한 점입니다. 막힌 곳을 치면 최 회장이 막고 반격합니다. 최 회장이 칼을 치켜들면 승진이를 눌러 막으세요. 못 막으면 한 점을 잃습니다.';go='대련 시작';hint='빈틈은 최 회장 쪽, 막기는 승진이 쪽을 누릅니다 · 키보드는 ↑ → ↓ 공격, ← 막기'}
       else{ti='최 회장은<br><em>강했습니다</em>';le='팀 합계 '+t+'점에서 시간이 다 됐습니다. '+G+'점을 따야 회장 자리에 오릅니다.';go='재대결';quitOn=true}
     }
     $('mEyebrow').textContent=e;$('mTitle').innerHTML=ti;$('mLead').textContent=le;$('mGoT').textContent=go;
@@ -1029,7 +1029,7 @@ h1 em::after{content:"";position:absolute;left:-.04em;right:-.04em;bottom:.04em;
   }
 
   // ───── 회장 결정전: 광선검 같은 죽도로 최 회장의 빈틈(머리·손목·허리)을 친다 ─────
-  var D={zone:-1,last:-1,zt:0,ztMax:1,gap:.9,stun:0,lunge:0,sz:0,taunt:0,won:false,texts:[],
+  var D={zone:-1,last:-1,zt:0,ztMax:1,gap:.9,stun:0,lunge:0,sz:0,taunt:0,won:false,texts:[],atk:0,atkMax:1,guard:0,gcd:0,cl:0,lastAtk:false,
     sj:{dir:1,moving:false,ph:0,back:false,hurt:0,mark:0,hand:-33,crown:false,saber:{ang:-.95,color:'#4FCB8F'}},
     ch:{dir:-1,moving:false,ph:0,back:false,hurt:0,mark:0,hand:-34,down:false,saber:{ang:-2.27,color:'#F0365F'}}};
   var ZN=['머리','손목','허리'],POSE=[[2.67,-30],[-1.32,-36],[-1.9,-47]],GUARD=[-2.27,-34];
@@ -1037,7 +1037,7 @@ h1 em::after{content:"";position:absolute;left:-.04em;right:-.04em;bottom:.04em;
     var k=clamp(Math.min(W/175,(HH-150)/130),1.3,3),fy=Math.min(HH-44,HH/2+52*k),cx=W/2+44*k;
     return {k:k,fy:fy,px:W/2-44*k,cx:cx,zones:[{x:cx,y:fy-53*k},{x:cx-23.6*k,y:fy+(D.ch.hand+2)*k},{x:cx,y:fy-27*k}]};
   }
-  function duelIdle(){D.zone=-1;D.won=false;D.ch.down=false;D.ch.hurt=0;D.sj.hurt=0;D.sj.crown=false;D.texts=[];D.stun=0;D.lunge=0}
+  function duelIdle(){D.atk=0;D.guard=0;D.gcd=0;D.cl=0;D.lastAtk=false;D.sj.hand=-33;D.zone=-1;D.won=false;D.ch.down=false;D.ch.hurt=0;D.sj.hurt=0;D.sj.crown=false;D.texts=[];D.stun=0;D.lunge=0}
   function duelStart(){audio();duelIdle();D.last=-1;D.gap=.9;D.taunt=0;S.mode='duel'}
   function duelWin(){
     D.won=true;D.zone=-1;D.ch.down=true;D.ch.hurt=9;D.sj.crown=true;D.texts=[];
@@ -1046,7 +1046,7 @@ h1 em::after{content:"";position:absolute;left:-.04em;right:-.04em;bottom:.04em;
     $('promo').hidden=false;fanfare();fireworks(6);
   }
   function strike(z){
-    if(S.mode!=='duel'||D.stun>0||D.lunge>0)return;
+    if(S.mode!=='duel'||D.stun>0||D.lunge>0||D.atk>0||D.guard>0)return;
     var g=geom(),zp=g.zones[z];
     D.lunge=.24;D.sz=z;
     if(z===D.zone){
@@ -1055,33 +1055,62 @@ h1 em::after{content:"";position:absolute;left:-.04em;right:-.04em;bottom:.04em;
       burst(zp.x,zp.y,22);beep(980,.06,'square',.08);beep(1480,.12,'triangle',.08);
       score(1,'kd');
     }else{
-      D.stun=.6;D.sj.hurt=.3;
+      // 막힌 곳을 치면 최 회장이 막아 내고 곧바로 반격한다
+      D.stun=.3;D.block=.3;D.zone=-1;attack(.6);
       var mx=(g.px+g.cx)/2,my=g.fy-44*g.k;
       D.texts.push({x:mx,y:my-20,t:0,text:'챙!'});
       burst(mx,my,12);beep(2100,.05,'square',.06);beep(240,.16,'sawtooth',.07);
     }
   }
+  function attack(t){D.atk=D.atkMax=t;D.lastAtk=true;D.zone=-1;beep(330,.12,'sawtooth',.06)}
+  function guardNow(){
+    if(S.mode!=='duel'||D.gcd>0)return;
+    D.guard=.45;D.gcd=.75;beep(620,.05,'triangle',.05);
+  }
+  function landAttack(){
+    var g=geom(),mx=(g.px+g.cx)/2,my=g.fy-44*g.k;
+    D.cl=.24;
+    if(D.guard>0){
+      // 막아 내면 최 회장에게 큰 빈틈이 생긴다
+      D.texts.push({x:g.px+20*g.k,y:my-20,t:0,text:'막았다!'});
+      burst(mx-10*g.k,my,16);beep(1900,.06,'square',.07);beep(900,.1,'triangle',.07);
+      do{D.zone=Math.floor(Math.random()*3)}while(D.zone===D.last);
+      D.last=D.zone;D.ztMax=D.zt=1.3;D.lastAtk=false;
+    }else{
+      D.texts.push({x:g.px,y:g.fy-70*g.k,t:0,text:'아야!'});
+      D.sj.hurt=.5;D.stun=.8;D.gap=.5;
+      burst(g.px,g.fy-36*g.k,14);beep(150,.25,'sawtooth',.09);
+      if(!reduce)replay(stage,'hit');
+      if(num(ME.v)>0)score(-1,'kd');
+    }
+  }
   function turnTo(cur,goal,r){return cur+(goal-cur)*r}
   function dUpdate(dt){
     var c=D.ch,s=D.sj,g=geom();
-    D.stun-=dt;D.lunge-=dt;D.taunt-=dt;c.hurt-=dt;s.hurt-=dt;
-    if(D.zone<0){
+    D.stun-=dt;D.lunge-=dt;D.taunt-=dt;c.hurt-=dt;s.hurt-=dt;D.guard-=dt;D.gcd-=dt;D.cl-=dt;D.block=(D.block||0)-dt;
+    if(D.atk>0){
+      D.atk-=dt;if(D.atk<=0)landAttack();
+    }else if(D.zone<0){
       D.gap-=dt;
       if(D.gap<=0){
-        do{D.zone=Math.floor(Math.random()*3)}while(D.zone===D.last);
-        D.last=D.zone;D.ztMax=D.zt=Math.max(.55,1.15-num(ME.v)*.04);
+        if(!D.lastAtk&&Math.random()<.38)attack(.85);
+        else{
+          do{D.zone=Math.floor(Math.random()*3)}while(D.zone===D.last);
+          D.last=D.zone;D.ztMax=D.zt=Math.max(.55,1.15-num(ME.v)*.04);D.lastAtk=false;
+        }
       }
     }else{
       D.zt-=dt;
       if(D.zt<=0){D.zone=-1;D.gap=.3+Math.random()*.3;D.taunt=.6}
     }
-    var pose=D.zone<0?GUARD:POSE[D.zone],r=Math.min(1,dt*16);
+    var pose=D.cl>0?[-3.3,-36]:D.atk>0?[-1.15,-49]:D.block>0?[-2.75,-38]:D.zone<0?GUARD:POSE[D.zone],r=Math.min(1,dt*(D.cl>0?30:16));
     c.saber.ang=turnTo(c.saber.ang,pose[0]>0?pose[0]-Math.PI*2:pose[0],r);c.hand=turnTo(c.hand,pose[1],r);
     var rest=-.95;
     if(D.lunge>0){
       var zp=g.zones[D.sz],hx=g.px+20*g.k,hy=g.fy+(s.hand+2)*g.k;
       rest=Math.atan2(zp.y-hy,zp.x-hx);
-    }else if(D.stun>0)rest=-1.9;
+    }else if(D.guard>0)rest=-1.72;else if(D.stun>0)rest=-1.9;
+    s.hand=turnTo(s.hand,D.guard>0?-46:-33,Math.min(1,dt*24));
     s.saber.ang=turnTo(s.saber.ang,rest,Math.min(1,dt*24));
     for(var i=D.texts.length-1;i>=0;i--){D.texts[i].t+=dt;if(D.texts[i].t>.8)D.texts.splice(i,1)}
   }
@@ -1099,7 +1128,7 @@ h1 em::after{content:"";position:absolute;left:-.04em;right:-.04em;bottom:.04em;
     var off=D.lunge>0?Math.sin(Math.PI*(1-D.lunge/.24))*16*k:0,rec=!D.won&&D.ch.hurt>0?D.ch.hurt/.4*6*k:0;
     if(D.won){
       ctx.save();ctx.translate(g.cx+12*k,g.fy);ctx.rotate(1.25);fig(0,-6*k,D.ch,'ch',k);ctx.restore();
-    }else fig(g.cx+rec,g.fy,D.ch,'ch',k);
+    }else fig(g.cx+rec-(D.cl>0?Math.sin(Math.PI*(1-D.cl/.24))*20*k:0),g.fy,D.ch,'ch',k);
     fig(g.px+off,g.fy,D.sj,'sj',k);
     ctx.font='500 12px "Gothic A1","Malgun Gothic",sans-serif';ctx.fillStyle='rgba(255,248,241,.7)';
     ctx.fillText(D.won?'문승진 회장':'문승진 사장',g.px,g.fy+22);ctx.fillText(D.won?'최 전 회장':'최 회장',g.cx,g.fy+22);
@@ -1116,7 +1145,15 @@ h1 em::after{content:"";position:absolute;left:-.04em;right:-.04em;bottom:.04em;
           ctx.strokeStyle='rgba(255,248,241,.28)';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(x,z.y,7+k*2,0,Math.PI*2);ctx.stroke();
         }
       });
-      if(D.stun>0)bubble(g.px,g.fy-80*k,'앗');
+      if(D.atk>0){
+        // 최 회장이 칼을 치켜들었다: 승진이를 눌러 막을 차례
+        var wy=g.fy-36*k,wr=20+k*6+Math.sin(now*18)*3;
+        ctx.shadowColor=C.cherry;ctx.shadowBlur=16;ctx.strokeStyle='#FF6B8B';ctx.lineWidth=3;
+        ctx.beginPath();ctx.arc(g.px,wy,wr,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;
+        ctx.strokeStyle=C.cream;ctx.lineWidth=2;ctx.beginPath();ctx.arc(g.px,wy,wr+6,-Math.PI/2,-Math.PI/2+Math.PI*2*clamp(D.atk/D.atkMax,0,1));ctx.stroke();
+        bubble(g.px,g.fy-84*k,D.guard>0?'막는 중':'막아!');bubble(g.cx,g.fy-84*k,'받아라');
+      }
+      else if(D.stun>0)bubble(g.px,g.fy-80*k,'앗');
       else if(D.taunt>0)bubble(g.cx,g.fy-80*k,'허허');
     }else if(D.won)bubble(g.cx+10*k,g.fy-44*k,'졌소…');
     ctx.font='800 '+Math.round(16+k*5)+'px "Hahmlet","Nanum Myeongjo",serif';ctx.lineJoin='round';
@@ -1290,6 +1327,7 @@ h1 em::after{content:"";position:absolute;left:-.04em;right:-.04em;bottom:.04em;
     audio();point(e);try{cv.setPointerCapture(e.pointerId)}catch(_){}
     if(S.mode!=='duel')return;
     var r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,g=geom(),best=-1,bd=Math.max(44,24*g.k);
+    if(Math.hypot(g.px-x,g.fy-36*g.k-y)<Math.max(54,34*g.k)){guardNow();return}
     g.zones.forEach(function(z,i){var dd=Math.hypot(z.x-x,z.y-y);if(dd<bd){bd=dd;best=i}});
     if(best>=0)strike(best);
   });
@@ -1299,7 +1337,7 @@ h1 em::after{content:"";position:absolute;left:-.04em;right:-.04em;bottom:.04em;
     keys[e.key]=true;
     var arrow=e.key.indexOf('Arrow')===0;
     if((S.mode==='play'||S.mode==='bbang'||S.mode==='duel')&&arrow)e.preventDefault();
-    if(S.mode==='duel'&&!e.repeat){var z={ArrowUp:0,ArrowRight:1,ArrowDown:2}[e.key];if(z!==undefined)strike(z)}
+    if(S.mode==='duel'&&!e.repeat){var z={ArrowUp:0,ArrowRight:1,ArrowDown:2}[e.key];if(z!==undefined)strike(z);else if(e.key==='ArrowLeft'||e.key===' ')guardNow()}
   });
   window.addEventListener('keyup',function(e){keys[e.key]=false});
   $('mute').addEventListener('click',function(){muted=!muted;this.textContent=muted?'소리 꺼짐':'소리 켜짐'});
